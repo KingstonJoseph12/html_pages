@@ -929,6 +929,160 @@
     font-size: 10px;
     color: var(--text-dim);
   }
+
+  /* ─────────────────────────────────────────────────────────
+     ── MOBILE OPTIMIZATION (NO HTML CHANGES REQUIRED) ──
+     ───────────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar {
+      width: 100%;
+      min-height: auto;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      flex-direction: row;
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      background: rgba(17, 19, 24, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 1000;
+      scrollbar-width: none;
+    }
+    
+    .sidebar::-webkit-scrollbar { 
+      display: none; 
+    }
+    
+    .sidebar-logo {
+      padding: 0 16px;
+      border-bottom: none;
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    
+    .sidebar-logo .brand { margin-bottom: 0; }
+    .sidebar-logo .channel, 
+    .sidebar-logo .meta { display: none; }
+    
+    .nav-section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      border-bottom: none;
+      height: 100%;
+    }
+    
+    .nav-label { display: none; }
+    
+    .nav-link {
+      padding: 0 16px;
+      height: 100%;
+      white-space: nowrap;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+    }
+    
+    .nav-link:hover, 
+    .nav-link.active {
+      background: transparent;
+      border-left-color: transparent;
+      border-bottom-color: var(--orange);
+    }
+    
+    .sidebar-footer { display: none; }
+    
+    .main { 
+      margin-left: 0; 
+      flex: 1; 
+      width: 100%; 
+    }
+    
+    .page-header { padding: 32px 24px 24px; }
+    .page-title { font-size: 28px; }
+    .page-header::before { font-size: 64px; right: -10px; top: -5px; }
+    
+    .content { padding: 24px; }
+    
+    .stat-grid-4, 
+    .stat-grid-3, 
+    .stat-grid-2 { 
+      grid-template-columns: 1fr; 
+      gap: 12px; 
+    }
+    
+    .hyp-card { 
+      grid-template-columns: 1fr; 
+      gap: 16px; 
+      padding: 20px; 
+    }
+    
+    .hyp-left { 
+      display: flex; 
+      align-items: center; 
+      justify-content: flex-start; 
+      gap: 12px; 
+      border-bottom: 1px solid var(--border); 
+      padding-bottom: 12px; 
+    }
+    
+    .hyp-left .hyp-code { margin-bottom: 0; }
+    .hyp-left > div:last-child { margin-top: 0 !important; }
+    
+    .rec-card { 
+      grid-template-columns: 1fr; 
+      gap: 16px; 
+      padding: 20px; 
+    }
+    
+    .rec-rank { 
+      font-size: 32px; 
+      text-align: left; 
+      position: absolute; 
+      top: 12px; 
+      right: 20px; 
+      opacity: 0.15; 
+      margin-bottom: 0; 
+    }
+    
+    .cohort-compare { grid-template-columns: 1fr; }
+    .outlier-grid { grid-template-columns: 1fr; }
+    .missing-grid { grid-template-columns: 1fr; }
+    
+    .diagnosis-item { 
+      grid-template-columns: 24px 1fr; 
+      gap: 12px; 
+      padding: 20px; 
+    }
+    
+    .bar-row { 
+      grid-template-columns: 100px 1fr 50px; 
+      font-size: 10px; 
+      gap: 8px; 
+    }
+    
+    .surprise-box { padding: 24px 20px; }
+    .surprise-box::before { font-size: 120px; right: -5px; top: -15px; }
+    
+    .page-footer { 
+      flex-direction: column; 
+      gap: 12px; 
+      text-align: center; 
+      padding: 24px; 
+    }
+  }
 </style>
 </head>
 <body>
