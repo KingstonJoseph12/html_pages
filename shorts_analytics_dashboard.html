@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortnite Shorts — Analytics Autopsy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #18181f;
+    --bg4: #1e1e28;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #e8ff47;
+    --accent2: #ff4747;
+    --accent3: #47c8ff;
+    --accent4: #a847ff;
+    --text: #f0f0f0;
+    --text2: #9090a0;
+    --text3: #5a5a70;
+    --green: #47ff8f;
+    --amber: #ffb347;
+    --red: #ff4747;
+    --card-r: 12px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Bebas Neue', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ---- SCROLLBAR ---- */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+  /* ---- NAV ---- */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    font-family: var(--display);
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--accent);
+  }
+  .nav-logo span { color: var(--text2); font-size: 13px; font-family: var(--mono); letter-spacing: 0; margin-left: 10px; font-weight: 400; }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--bg3); }
+
+  /* ---- LAYOUT ---- */
+  main { padding-top: 56px; }
+  .section {
+    padding: 72px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .section + .section { border-top: 1px solid var(--border); }
+
+  /* ---- HERO ---- */
+  .hero {
+    padding: 80px 32px 72px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 1px;
+    background: var(--accent);
+  }
+  h1.hero-title {
+    font-family: var(--display);
+    font-size: clamp(52px, 8vw, 96px);
+    line-height: 0.92;
+    letter-spacing: 1px;
+    color: var(--text);
+    margin-bottom: 28px;
+  }
+  h1.hero-title em { color: var(--accent); font-style: normal; }
+  .hero-sub {
+    max-width: 580px;
+    color: var(--text2);
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--card-r);
+    overflow: hidden;
+    max-width: 760px;
+  }
+  .hero-stat {
+    background: var(--bg2);
+    padding: 20px 24px;
+  }
+  .hero-stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .hero-stat-val {
+    font-family: var(--display);
+    font-size: 32px;
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+  .hero-stat-val.down { color: var(--red); }
+  .hero-stat-val.neutral { color: var(--accent); }
+  .hero-stat-val.up { color: var(--green); }
+  .hero-stat-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* ---- SECTION HEADERS ---- */
+  .section-step {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  h2.section-title {
+    font-family: var(--display);
+    font-size: clamp(32px, 4vw, 48px);
+    letter-spacing: 0.5px;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .section-desc {
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 300;
+    max-width: 560px;
+    margin-bottom: 36px;
+    line-height: 1.65;
+  }
+
+  /* ---- GRID LAYOUTS ---- */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    nav .nav-links { display: none; }
+  }
+
+  /* ---- CARD BASE ---- */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-r);
+    padding: 20px 24px;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* ---- REGIME CHANGE BANNER ---- */
+  .regime-banner {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--card-r);
+    padding: 20px 28px;
+    margin-bottom: 28px;
+    display: flex; align-items: flex-start; gap: 20px;
+  }
+  .regime-banner-date {
+    font-family: var(--display);
+    font-size: 40px;
+    color: var(--accent);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .regime-banner-text h3 {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .regime-banner-text p {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 300;
+  }
+
+  /* ---- HYPOTHESIS TABLE ---- */
+  .hyp-table { width: 100%; border-collapse: collapse; }
+  .hyp-table th {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0 12px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hyp-table td {
+    padding: 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    color: var(--text2);
+  }
+  .hyp-table tr:last-child td { border-bottom: none; }
+  .hyp-table tr:hover td { background: var(--bg3); }
+  .hyp-name { color: var(--text); font-weight: 500; font-size: 13px; }
+  .hyp-interp { font-size: 12px; max-width: 220px; }
+  .verdict {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .verdict.supported { background: rgba(71,255,143,0.12); color: var(--green); border: 1px solid rgba(71,255,143,0.25); }
+  .verdict.refuted { background: rgba(255,71,71,0.1); color: var(--red); border: 1px solid rgba(255,71,71,0.2); }
+  .verdict.inconclusive { background: rgba(255,179,71,0.1); color: var(--amber); border: 1px solid rgba(255,179,71,0.2); }
+
+  /* ---- METRIC DELTA ---- */
+  .delta { font-family: var(--mono); font-size: 12px; }
+  .delta.neg { color: var(--red); }
+  .delta.pos { color: var(--green); }
+  .delta.flat { color: var(--text3); }
+
+  /* ---- DIAGNOSIS CARDS ---- */
+  .diagnosis-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-r);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .diagnosis-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .diagnosis-card.primary::before { background: var(--accent2); }
+  .diagnosis-card.secondary::before { background: var(--accent3); }
+  .diagnosis-card.tertiary::before { background: var(--accent4); }
+  .diagnosis-rank {
+    font-family: var(--display);
+    font-size: 64px;
+    color: var(--bg3);
+    position: absolute;
+    right: 20px; top: 10px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .diagnosis-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .diagnosis-card.primary .diagnosis-label { color: var(--accent2); }
+  .diagnosis-card.secondary .diagnosis-label { color: var(--accent3); }
+  .diagnosis-card.tertiary .diagnosis-label { color: var(--accent4); }
+  .diagnosis-title {
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    max-width: 85%;
+  }
+  .diagnosis-evidence {
+    font-size: 12px;
+    color: var(--text2);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .evidence-stat {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+    margin: 2px 2px;
+  }
+
+  /* ---- RECOMMENDATION CARDS ---- */
+  .rec-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-r);
+    padding: 22px 24px;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .rec-num {
+    width: 44px; height: 44px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display);
+    font-size: 22px;
+    color: var(--accent);
+  }
+  .rec-area {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .rec-title { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+  .rec-evidence {
+    font-size: 12px; color: var(--text2); margin-bottom: 8px; font-weight: 300; line-height: 1.55;
+  }
+  .rec-evidence strong { color: var(--text); font-weight: 500; }
+  .rec-metric {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px;
+    background: var(--bg4); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 6px;
+    color: var(--green);
+    margin-top: 6px;
+  }
+  .rec-metric::before { content: '✓'; color: var(--green); }
+
+  /* ---- AUDIO TABLE ---- */
+  .audio-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px 80px;
+    gap: 8px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .audio-row:not(.header):hover { background: var(--bg3); }
+  .audio-row.header {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .audio-name { font-weight: 400; color: var(--text); }
+  .audio-val { font-family: var(--mono); font-size: 12px; color: var(--text2); text-align: right; }
+  .audio-badge {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+    padding: 2px 6px; border-radius: 3px; text-transform: uppercase;
+  }
+  .audio-badge.best-views { background: rgba(232,255,71,0.12); color: var(--accent); border: 1px solid rgba(232,255,71,0.3); }
+  .audio-badge.best-subs { background: rgba(71,200,255,0.12); color: var(--accent3); border: 1px solid rgba(71,200,255,0.3); }
+  .audio-badge.weak { background: rgba(255,71,71,0.08); color: var(--accent2); border: 1px solid rgba(255,71,71,0.2); }
+  .bar-bg { background: var(--bg4); height: 4px; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+  .bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+
+  /* ---- OUTLIER TABLE ---- */
+  .outlier-table { width: 100%; border-collapse: collapse; }
+  .outlier-table th {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    text-align: left; padding: 6px 10px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .outlier-table td {
+    padding: 10px; font-size: 12px; color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+  .outlier-table tr:last-child td { border-bottom: none; }
+  .outlier-table tr:hover td { background: var(--bg3); }
+  .ot-vid { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .ot-views { font-family: var(--display); font-size: 18px; color: var(--text); }
+  .ot-ctr { font-family: var(--mono); font-size: 12px; }
+  .ot-ret { font-family: var(--mono); font-size: 12px; }
+  .tag-top { color: var(--green); }
+  .tag-bot { color: var(--red); }
+
+  /* ---- SURPRISE BOX ---- */
+  .surprise-box {
+    background: linear-gradient(135deg, rgba(232,255,71,0.04), rgba(232,255,71,0.01));
+    border: 1px solid rgba(232,255,71,0.2);
+    border-radius: var(--card-r);
+    padding: 28px 32px;
+  }
+  .surprise-label {
+    font-family: var(--mono); font-size: 10px; color: var(--accent);
+    letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .surprise-box h3 { font-size: 19px; font-weight: 500; margin-bottom: 10px; }
+  .surprise-box p { font-size: 14px; color: var(--text2); font-weight: 300; line-height: 1.7; }
+  .surprise-box .stat-highlight {
+    font-family: var(--display); font-size: 28px; color: var(--accent); margin-right: 6px;
+  }
+
+  /* ---- BLINDSPOT BOX ---- */
+  .blindspot-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-r);
+    padding: 24px;
+  }
+  .blindspot-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; color: var(--text2);
+  }
+  .blindspot-item:last-child { border-bottom: none; }
+  .blindspot-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text3); flex-shrink: 0; margin-top: 7px;
+  }
+
+  /* ---- CHART CONTAINERS ---- */
+  .chart-wrap { position: relative; width: 100%; }
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    font-size: 12px; color: var(--text2);
+    margin-bottom: 12px;
+    font-family: var(--mono);
+  }
+  .chart-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ---- STAT COMPARE ---- */
+  .compare-block {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--card-r); padding: 20px 24px;
+  }
+  .compare-title {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .compare-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .compare-row:last-child { margin-bottom: 0; }
+  .compare-label { font-size: 12px; color: var(--text2); width: 130px; flex-shrink: 0; }
+  .compare-bars { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .c-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .c-bar-label { font-family: var(--mono); font-size: 10px; width: 30px; flex-shrink: 0; }
+  .c-bar-label.pre { color: var(--accent3); }
+  .c-bar-label.post { color: var(--accent4); }
+  .c-bar-outer { flex: 1; background: var(--bg4); height: 6px; border-radius: 3px; overflow: hidden; }
+  .c-bar-inner { height: 100%; border-radius: 3px; }
+  .c-bar-inner.pre { background: var(--accent3); }
+  .c-bar-inner.post { background: var(--accent4); }
+  .c-bar-val { font-family: var(--mono); font-size: 11px; color: var(--text2); width: 50px; text-align: right; flex-shrink: 0; }
+
+  /* ---- FOOTER ---- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fade-up 0.6s ease forwards; }
+  .fade-in-d1 { animation: fade-up 0.6s 0.1s ease forwards; opacity: 0; }
+  .fade-in-d2 { animation: fade-up 0.6s 0.2s ease forwards; opacity: 0; }
+  .fade-in-d3 { animation: fade-up 0.6s 0.3s ease forwards; opacity: 0; }
+  .fade-in-d4 { animation: fade-up 0.6s 0.4s ease forwards; opacity: 0; }
+
+  /* ---- TABS ---- */
+  .tab-btns { display: flex; gap: 4px; margin-bottom: 20px; }
+  .tab-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; padding: 7px 14px;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text2); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { background: var(--bg3); color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 500; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ---- SEPARATOR ---- */
+  .sep { height: 1px; background: var(--border); margin: 28px 0; }
+
+  /* ---- CALLOUT ---- */
+  .callout {
+    background: var(--bg3); border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0; padding: 14px 18px;
+    font-size: 13px; color: var(--text2); margin: 18px 0;
+  }
+  .callout strong { color: var(--accent); }
+
+  /* ---- PILL ---- */
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; border: 1px solid;
+  }
+  .pill.cohort-pre { color: var(--accent3); border-color: var(--accent3); background: rgba(71,200,255,0.08); }
+  .pill.cohort-post { color: var(--accent4); border-color: var(--accent4); background: rgba(168,71,255,0.08); }
+
+  /* ---- WEEKLY UPLOAD BARS ---- */
+  .upload-timeline {
+    display: flex; align-items: flex-end; gap: 4px; height: 120px;
+    border-bottom: 1px solid var(--border); margin-bottom: 8px;
+  }
+  .week-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .week-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+    min-height: 2px;
+    transition: opacity 0.15s;
+    cursor: default;
+  }
+  .week-bar:hover { opacity: 0.75; }
+  .week-bar.pre { background: var(--accent3); }
+  .week-bar.post { background: var(--accent); }
+  .week-label { font-family: var(--mono); font-size: 9px; color: var(--text3); white-space: nowrap; writing-mode: vertical-rl; transform: rotate(180deg); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">AUTOPSY <span>fortnite shorts · apr 27 split</span></div>
+  <div class="nav-links">
+    <a href="#overview">Overview</a>
+    <a href="#regime">Regime</a>
+    <a href="#hypotheses">Hypotheses</a>
+    <a href="#audio">Audio</a>
+    <a href="#outliers">Outliers</a>
+    <a href="#diagnosis">Diagnosis</a>
+    <a href="#recs">Recs</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- =========  HERO  ========= -->
+<div class="hero">
+  <div class="hero-eyebrow fade-in">Channel Analytics Deep-Dive</div>
+  <h1 class="hero-title fade-in-d1">THE <em>SHORTS</em><br>AUTOPSY</h1>
+  <p class="hero-sub fade-in-d2">500 videos. Two data sources. One hard question: why did automation hurt performance when the view numbers look fine?</p>
+  <div class="hero-stats fade-in-d3">
+    <div class="hero-stat">
+      <div class="hero-stat-label">Videos analyzed</div>
+      <div class="hero-stat-val neutral">500</div>
+      <div class="hero-stat-sub">378 pre · 120 post</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">CTR change</div>
+      <div class="hero-stat-val down">−24.6%</div>
+      <div class="hero-stat-sub">1.94% → 1.46%</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Subs/view drop</div>
+      <div class="hero-stat-val down">−27%</div>
+      <div class="hero-stat-sub">0.684% → 0.499%</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Retention change</div>
+      <div class="hero-stat-val down">−4.76 pts</div>
+      <div class="hero-stat-sub">median 94.48 → 89.72</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========  SECTION: OVERVIEW  ========= -->
+<section class="section" id="overview">
+  <div class="section-step">Step 0 + 1</div>
+  <h2 class="section-title">DATA OVERVIEW</h2>
+  <p class="section-desc">Schema validation, cohort counts, and the metric delta table that frames every hypothesis that follows.</p>
+
+  <div class="grid-2" style="margin-bottom: 24px;">
+    <div class="card">
+      <div class="card-title">CSV source</div>
+      <div style="font-size: 13px; color: var(--text2); line-height: 1.8;">
+        <div style="display:flex;justify-content:space-between;"><span>Valid video rows</span><span style="font-family:var(--mono);color:var(--text)">500</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Date range</span><span style="font-family:var(--mono);color:var(--text)">Sep 26 2023 – May 15 2026</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Null publish time</span><span style="font-family:var(--mono);color:var(--amber)">2 rows</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Zero impression rows</span><span style="font-family:var(--mono);color:var(--amber)">1 row</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Upload hour available</span><span style="font-family:var(--mono);color:var(--red)">0 / 500</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Unique viewers col</span><span style="font-family:var(--mono);color:var(--red)">500 nulls</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">jobs.db source</div>
+      <div style="font-size: 13px; color: var(--text2); line-height: 1.8;">
+        <div style="display:flex;justify-content:space-between;"><span>Total rows</span><span style="font-family:var(--mono);color:var(--text)">153</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Status: done</span><span style="font-family:var(--mono);color:var(--green)">118</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Status: skipped</span><span style="font-family:var(--mono);color:var(--amber)">24</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Jobs matched to CSV</span><span style="font-family:var(--mono);color:var(--text)">113</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>POST unmatched rate</span><span style="font-family:var(--mono);color:var(--amber)">5.83%</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>audio_bpm / genre</span><span style="font-family:var(--mono);color:var(--red)">100% null</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Note:</strong> The CSV contains valid publish dates up to May 15, 2026 — not May 8 as stated in the prompt. This means 42 POST videos are under 7 days old using the true latest date, inflating recency bias.
+  </div>
+
+  <div class="sep"></div>
+
+  <div style="margin-bottom: 18px; display: flex; gap: 10px; align-items: center;">
+    <span class="pill cohort-pre">PRE cohort · n=378</span>
+    <span class="pill cohort-post">POST cohort · n=120</span>
+    <span style="font-size: 12px; color: var(--text3); font-family: var(--mono);">split: Apr 27, 2026 IST</span>
+  </div>
+
+  <div class="compare-block">
+    <div class="compare-title">PRE vs POST — key metric comparison</div>
+
+    <div class="compare-row">
+      <div class="compare-label">Views (median)</div>
+      <div class="compare-bars">
+        <div class="c-bar-wrap"><span class="c-bar-label pre">PRE</span><div class="c-bar-outer"><div class="c-bar-inner pre" style="width:100%"></div></div><span class="c-bar-val">1,073</span></div>
+        <div class="c-bar-wrap"><span class="c-bar-label post">POST</span><div class="c-bar-outer"><div class="c-bar-inner post" style="width:99.8%"></div></div><span class="c-bar-val">1,071</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">CTR % (mean)</div>
+      <div class="compare-bars">
+        <div class="c-bar-wrap"><span class="c-bar-label pre">PRE</span><div class="c-bar-outer"><div class="c-bar-inner pre" style="width:100%"></div></div><span class="c-bar-val">1.94%</span></div>
+        <div class="c-bar-wrap"><span class="c-bar-label post">POST</span><div class="c-bar-outer"><div class="c-bar-inner post" style="width:75%"></div></div><span class="c-bar-val">1.46%</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Avg % viewed (median)</div>
+      <div class="compare-bars">
+        <div class="c-bar-wrap"><span class="c-bar-label pre">PRE</span><div class="c-bar-outer"><div class="c-bar-inner pre" style="width:100%"></div></div><span class="c-bar-val">94.48%</span></div>
+        <div class="c-bar-wrap"><span class="c-bar-label post">POST</span><div class="c-bar-outer"><div class="c-bar-inner post" style="width:94.96%"></div></div><span class="c-bar-val">89.72%</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Subs/view (aggregate)</div>
+      <div class="compare-bars">
+        <div class="c-bar-wrap"><span class="c-bar-label pre">PRE</span><div class="c-bar-outer"><div class="c-bar-inner pre" style="width:100%"></div></div><span class="c-bar-val">0.684%</span></div>
+        <div class="c-bar-wrap"><span class="c-bar-label post">POST</span><div class="c-bar-outer"><div class="c-bar-inner post" style="width:73%"></div></div><span class="c-bar-val">0.499%</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Impressions (mean)</div>
+      <div class="compare-bars">
+        <div class="c-bar-wrap"><span class="c-bar-label pre">PRE</span><div class="c-bar-outer"><div class="c-bar-inner pre" style="width:100%"></div></div><span class="c-bar-val">138.4</span></div>
+        <div class="c-bar-wrap"><span class="c-bar-label post">POST</span><div class="c-bar-outer"><div class="c-bar-inner post" style="width:86.3%"></div></div><span class="c-bar-val">119.4</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Subs gained (mean)</div>
+      <div class="compare-bars">
+        <div class="c-bar-wrap"><span class="c-bar-label pre">PRE</span><div class="c-bar-outer"><div class="c-bar-inner pre" style="width:100%"></div></div><span class="c-bar-val">9.98</span></div>
+        <div class="c-bar-wrap"><span class="c-bar-label post">POST</span><div class="c-bar-outer"><div class="c-bar-inner post" style="width:73%"></div></div><span class="c-bar-val">7.29</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========  SECTION: REGIME CHANGE  ========= -->
+<section class="section" id="regime">
+  <div class="section-step">Step 2</div>
+  <h2 class="section-title">REGIME CHANGE</h2>
+  <p class="section-desc">Detecting the automation go-live date from data alone — without using the known Apr 27 date. The data screams it.</p>
+
+  <div class="regime-banner">
+    <div class="regime-banner-date">APR 27</div>
+    <div class="regime-banner-text">
+      <h3>Data-inferred break matches known go-live exactly</h3>
+      <p>Weekly uploads jumped from 4 (week of Apr 20) to 42 (week of Apr 27). Inter-upload interval collapsed from ~60 hrs mean to 4 hrs mean, with median of 2.01 hrs from exact job timestamps. Title variability also narrowed sharply.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 24px;">
+    <div class="card">
+      <div class="card-title">Weekly upload volume — CSV top 500</div>
+      <div class="upload-timeline" id="upload-timeline"></div>
+      <div style="display:flex;gap:16px;margin-top:4px;font-family:var(--mono);font-size:10px;color:var(--text3);">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;background:var(--accent3);border-radius:2px;"></span> PRE</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;background:var(--accent);border-radius:2px;"></span> POST</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Metadata homogenization</div>
+      <div style="margin-bottom: 18px;">
+        <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">TITLE LENGTH IQR</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--accent3);width:32px;">PRE</span>
+            <div style="flex:1;background:var(--bg4);height:12px;border-radius:3px;overflow:hidden;position:relative;">
+              <div style="position:absolute;left:12.4%;width:18.9%;height:100%;background:var(--accent3);opacity:0.7;border-radius:2px;"></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text2);">31–80 chars</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--accent4);width:32px;">POST</span>
+            <div style="flex:1;background:var(--bg4);height:12px;border-radius:3px;overflow:hidden;position:relative;">
+              <div style="position:absolute;left:18.3%;width:2%;height:100%;background:var(--accent4);opacity:0.9;border-radius:2px;"></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--red);">47–52 chars ← locked</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom: 14px;">
+        <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">HASHTAG COUNT IQR</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--accent3);width:32px;">PRE</span>
+            <div style="flex:1;background:var(--bg4);height:12px;border-radius:3px;overflow:hidden;position:relative;">
+              <div style="position:absolute;left:10%;width:40%;height:100%;background:var(--accent3);opacity:0.7;border-radius:2px;"></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text2);">1–5 tags</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--accent4);width:32px;">POST</span>
+            <div style="flex:1;background:var(--bg4);height:12px;border-radius:3px;overflow:hidden;position:relative;">
+              <div style="position:absolute;left:30%;width:1%;height:100%;background:var(--accent4);opacity:0.9;border-radius:2px;"></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--red);">exactly 3 ← locked</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;">INTER-UPLOAD INTERVAL</div>
+      <div style="display:flex;gap:16px;">
+        <div style="text-align:center;">
+          <div style="font-family:var(--display);font-size:28px;color:var(--accent3);">60h</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);">PRE mean</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:18px;color:var(--text3);">→</div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--display);font-size:28px;color:var(--accent);">2h</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);">POST median</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========  SECTION: HYPOTHESES  ========= -->
+<section class="section" id="hypotheses">
+  <div class="section-step">Step 3</div>
+  <h2 class="section-title">HYPOTHESIS TESTS</h2>
+  <p class="section-desc">Eight hypotheses tested against actual data. Each verdict is backed by numbers — no vibes.</p>
+
+  <div class="tab-btns">
+    <button class="tab-btn active" onclick="switchTab(this,'all')">All 8</button>
+    <button class="tab-btn" onclick="switchTab(this,'supported')">Supported</button>
+    <button class="tab-btn" onclick="switchTab(this,'inconclusive')">Inconclusive</button>
+    <button class="tab-btn" onclick="switchTab(this,'refuted')">Refuted</button>
+  </div>
+
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <table class="hyp-table">
+      <thead>
+        <tr>
+          <th style="padding-left:20px;">Hypothesis</th>
+          <th>Verdict</th>
+          <th>Key PRE metric</th>
+          <th>Key POST metric</th>
+          <th>Δ</th>
+          <th>Interpretation</th>
+        </tr>
+      </thead>
+      <tbody id="hyp-tbody">
+        <tr data-verdict="inconclusive">
+          <td style="padding-left:20px;"><span class="hyp-name">H1 — Upload timing</span></td>
+          <td><span class="verdict inconclusive">INCONCLUSIVE</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">No CSV hour data</td>
+          <td style="font-family:var(--mono);font-size:12px;">1h, 3h IST targeted</td>
+          <td class="delta flat">—</td>
+          <td class="hyp-interp">0–5 IST bucket: median 913 views vs 1072 for 18–23 IST. But no PRE baseline available.</td>
+        </tr>
+        <tr data-verdict="supported">
+          <td style="padding-left:20px;"><span class="hyp-name">H2 — Freq. saturation</span></td>
+          <td><span class="verdict supported">SUPPORTED</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">6.4 uploads/wk</td>
+          <td style="font-family:var(--mono);font-size:12px;">40 uploads/wk</td>
+          <td class="delta neg">+524%</td>
+          <td class="hyp-interp">Within POST, more uploads/week correlates r=−0.9998 with mean views (n=3 weeks, use cautiously).</td>
+        </tr>
+        <tr data-verdict="supported">
+          <td style="padding-left:20px;"><span class="hyp-name">H3 — CTR collapse</span></td>
+          <td><span class="verdict supported">SUPPORTED</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">CTR 1.94%, impr 138</td>
+          <td style="font-family:var(--mono);font-size:12px;">CTR 1.46%, impr 119</td>
+          <td class="delta neg">−24.6%</td>
+          <td class="hyp-interp">Both CTR and impressions fell. Views stayed flat in top-500 export. Compound distribution signal problem.</td>
+        </tr>
+        <tr data-verdict="supported">
+          <td style="padding-left:20px;"><span class="hyp-name">H4 — Engagement quality</span></td>
+          <td><span class="verdict supported">SUPPORTED</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">Like rate 1.58%</td>
+          <td style="font-family:var(--mono);font-size:12px;">Like rate 1.63%</td>
+          <td class="delta flat">≈ flat</td>
+          <td class="hyp-interp">Like rate held. Subs/view dropped 10.9% in mean. Subscriber conversion weakened, not likes.</td>
+        </tr>
+        <tr data-verdict="supported">
+          <td style="padding-left:20px;"><span class="hyp-name">H5 — Retention signal</span></td>
+          <td><span class="verdict supported">SUPPORTED</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">Median 94.48%</td>
+          <td style="font-family:var(--mono);font-size:12px;">Median 89.72%</td>
+          <td class="delta neg">−4.76 pts</td>
+          <td class="hyp-interp">Mean hides this — median tells the truth. Rendered clip length vs retention: r=−0.608. Shorter = better.</td>
+        </tr>
+        <tr data-verdict="supported">
+          <td style="padding-left:20px;"><span class="hyp-name">H6 — Recency bias</span></td>
+          <td><span class="verdict supported">SUPPORTED</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">PRE: 12.95 views/day</td>
+          <td style="font-family:var(--mono);font-size:12px;">POST: 391.87 views/day</td>
+          <td class="delta pos">+2925%</td>
+          <td class="hyp-interp">42 POST videos are under 7 days old at file export. Views comparison is inherently unfair — POST is still accumulating.</td>
+        </tr>
+        <tr data-verdict="inconclusive">
+          <td style="padding-left:20px;"><span class="hyp-name">H7 — Audio performance</span></td>
+          <td><span class="verdict inconclusive">INCONCLUSIVE</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">No PRE audio data</td>
+          <td style="font-family:var(--mono);font-size:12px;">n=43 joined rows</td>
+          <td class="delta flat">—</td>
+          <td class="hyp-interp">Huge spread: best track 5,275 mean views vs worst 934. Small n but actionable. See Audio section.</td>
+        </tr>
+        <tr data-verdict="supported">
+          <td style="padding-left:20px;"><span class="hyp-name">H8 — Sub conversion</span></td>
+          <td><span class="verdict supported">SUPPORTED</span></td>
+          <td style="font-family:var(--mono);font-size:12px;">0.684% subs/view</td>
+          <td style="font-family:var(--mono);font-size:12px;">0.499% subs/view</td>
+          <td class="delta neg">−27.0%</td>
+          <td class="hyp-interp">Aggregate conversion dropped hard. POST top converters share descriptive titles + "Have a great day" audio.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- RETENTION + DURATION CHART -->
+  <div class="grid-2" style="margin-top: 4px;">
+    <div class="card">
+      <div class="card-title">Clip duration vs retention (POST)</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">Shorter clips = higher retention. r=−0.608 from jobs DB join.</div>
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:#47c8ff;"></span> 10–14s clips</span>
+        <span><span class="legend-dot" style="background:#a847ff;"></span> 15–19s clips</span>
+        <span><span class="legend-dot" style="background:#e8ff47;"></span> &lt;10s clips</span>
+      </div>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="durationRetChart" role="img" aria-label="Bar chart showing that shorter clips have higher average retention percentage. Under 10s: 160%, 10-14s: 110%, 15-19s: 92%, 20s+: 56%.">Under 10s: 160%, 10-14s: 110%, 15-19s: 92%, 20s+: 56%</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">CTR vs Impressions change (PRE→POST)</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Both dropped — compound distribution problem, not just thumbnail quality.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom: 18px;">
+        <div style="text-align:center;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;">IMPRESSIONS</div>
+          <div style="font-family:var(--display);font-size:36px;color:var(--accent3);">138</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">PRE mean</div>
+          <div style="font-size:18px;color:var(--red);font-family:var(--mono);margin-top:4px;">▼ 13.7%</div>
+          <div style="font-family:var(--display);font-size:36px;color:var(--accent4);margin-top:4px;">119</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">POST mean</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;">CTR</div>
+          <div style="font-family:var(--display);font-size:36px;color:var(--accent3);">1.94%</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">PRE mean</div>
+          <div style="font-size:18px;color:var(--red);font-family:var(--mono);margin-top:4px;">▼ 24.6%</div>
+          <div style="font-family:var(--display);font-size:36px;color:var(--accent4);margin-top:4px;">1.46%</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">POST mean</div>
+        </div>
+      </div>
+      <div style="background:var(--bg4);border-radius:8px;padding:12px;font-size:12px;color:var(--text2);">
+        If only CTR dropped → thumbnail/title problem.<br>
+        If only impressions dropped → algorithm distribution problem.<br>
+        <strong style="color:var(--amber);">Both dropped → compound problem (this case).</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========  SECTION: AUDIO  ========= -->
+<section class="section" id="audio">
+  <div class="section-step">Step 3 H7 + Step 4f</div>
+  <h2 class="section-title">AUDIO TRACK ANALYSIS</h2>
+  <p class="section-desc">The only signal requiring the DB join. Track-level performance spread is significant — this is your most controllable lever.</p>
+
+  <div class="grid-2" style="margin-bottom: 24px;">
+    <div class="card">
+      <div class="card-title">Best and worst tracks — mean views</div>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="audioChart" role="img" aria-label="Horizontal bar chart of audio track mean views. Small Creator Struggles leads at 5275 views, followed by Have a great day at 2091. Weakest: We can play together at 934.">Audio track performance by mean views.</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Track-level detail</div>
+      <div class="audio-row header">
+        <span>Track</span>
+        <span style="text-align:right;">Uses</span>
+        <span style="text-align:right;">Mean views</span>
+        <span style="text-align:right;">Subs/view</span>
+        <span style="text-align:right;">Status</span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">Small Creator Struggles</span>
+        <span class="audio-val">6</span>
+        <span class="audio-val" style="color:var(--accent);">5,275</span>
+        <span class="audio-val">0.258%</span>
+        <span><span class="audio-badge best-views">Top reach</span></span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">Have a great day</span>
+        <span class="audio-val">5</span>
+        <span class="audio-val">2,091</span>
+        <span class="audio-val" style="color:var(--accent3);">1.109%</span>
+        <span><span class="audio-badge best-subs">Top subs</span></span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">67 is not funnyT_T</span>
+        <span class="audio-val">5</span>
+        <span class="audio-val">1,632</span>
+        <span class="audio-val">0.142%</span>
+        <span>—</span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">Like &amp; Subscribe</span>
+        <span class="audio-val">3</span>
+        <span class="audio-val">1,557</span>
+        <span class="audio-val">0.645%</span>
+        <span>—</span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">Do you like fortnite</span>
+        <span class="audio-val">8</span>
+        <span class="audio-val">1,238</span>
+        <span class="audio-val">0.324%</span>
+        <span>—</span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">have a great day</span>
+        <span class="audio-val">4</span>
+        <span class="audio-val">994</span>
+        <span class="audio-val">0.849%</span>
+        <span style="font-size:11px;color:var(--amber);font-family:var(--mono);">dupe label?</span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">He wasn't ready</span>
+        <span class="audio-val">5</span>
+        <span class="audio-val">989</span>
+        <span class="audio-val">0.752%</span>
+        <span><span class="audio-badge weak">Weak</span></span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">Hope you have a great day</span>
+        <span class="audio-val">4</span>
+        <span class="audio-val">960</span>
+        <span class="audio-val">0.730%</span>
+        <span><span class="audio-badge weak">Weak</span></span>
+      </div>
+      <div class="audio-row">
+        <span class="audio-name">We can play together</span>
+        <span class="audio-val">3</span>
+        <span class="audio-val">934</span>
+        <span class="audio-val">0.308%</span>
+        <span><span class="audio-badge weak">Weak</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Duplicate label alert:</strong> "Have a great day" (capital H, 5 uses) and "have a great day" (lowercase, 4 uses) may be the same track. If merged: n=9, mean views ≈ 1,594, mean subs/view ≈ 0.94% — still the best subscriber converter in the pool.
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Audio pool eligibility over time</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:10px;">Pool size stays locked at 15. Eligible count fluctuates between 7.5 and 9.33 — roughly 40–60% of the pool gets used on any given day.</div>
+      <div class="chart-wrap" style="height:140px;">
+        <canvas id="eligChart" role="img" aria-label="Line chart showing audio eligible count varying between 7 and 9 from May 9 to May 17. Pool size stays flat at 15.">Eligible audio count by date.</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Overuse risk</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Threshold: >4 uses = potential repetition flag by algorithm.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:var(--text2);">Do you like fortnite</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--red);">8 uses ⚠</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--red);"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:var(--text2);">Small Creator Struggles</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--amber);">6 uses ⚠</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:75%;background:var(--amber);"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:var(--text2);">67 is not funnyT_T</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--amber);">6 uses ⚠</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:75%;background:var(--amber);"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:var(--text2);">have a great day (lower)</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--accent3);">5 uses</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:62.5%;background:var(--accent3);"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========  SECTION: OUTLIERS  ========= -->
+<section class="section" id="outliers">
+  <div class="section-step">Step 4a</div>
+  <h2 class="section-title">OUTLIER ANATOMY</h2>
+  <p class="section-desc">Top 5 and bottom 5 by views in each cohort. What separates the algorithm's favorites from its rejects?</p>
+
+  <div class="tab-btns">
+    <button class="tab-btn active" onclick="switchOutlierTab(this,'pre-top')">PRE Top 5</button>
+    <button class="tab-btn" onclick="switchOutlierTab(this,'pre-bot')">PRE Bottom 5</button>
+    <button class="tab-btn" onclick="switchOutlierTab(this,'post-top')">POST Top 5</button>
+    <button class="tab-btn" onclick="switchOutlierTab(this,'post-bot')">POST Bottom 5</button>
+  </div>
+
+  <div id="pre-top" class="tab-pane active">
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="outlier-table">
+        <thead><tr>
+          <th style="padding-left:16px;">Video ID</th>
+          <th>Day</th>
+          <th>Views</th>
+          <th>CTR</th>
+          <th>Avg % Viewed</th>
+          <th>Subs</th>
+          <th>Dur (s)</th>
+          <th>Hashtags</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">6qcv1hjHdFY</td><td>Wed</td><td class="ot-views">31,563</td><td class="ot-ctr" style="color:var(--green);">8.17%</td><td class="ot-ret">117.89%</td><td>37</td><td>10s</td><td>5</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">jqSh9e-9uYY</td><td>Tue</td><td class="ot-views">10,903</td><td class="ot-ctr" style="color:var(--green);">4.23%</td><td class="ot-ret">130.45%</td><td>24</td><td>9s</td><td>5</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">NAhuVXYybRw</td><td>Mon</td><td class="ot-views">10,357</td><td class="ot-ctr" style="color:var(--green);">3.94%</td><td class="ot-ret">103.42%</td><td>94</td><td>18s</td><td>4</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">JXWL19vft2o</td><td>Mon</td><td class="ot-views">9,277</td><td class="ot-ctr">1.97%</td><td class="ot-ret">128.22%</td><td>53</td><td>9s</td><td>8</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">gCDl5KCIKFE</td><td>Sat</td><td class="ot-views">9,074</td><td class="ot-ctr">0.72%</td><td class="ot-ret" style="color:var(--green);">129.84%</td><td>86</td><td>9s</td><td>2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:16px;">Common pattern: 9–10 second clips, exceptionally high retention (all >100%), high subscriber yield per video. CTR varies wildly — the algorithm distributed these on retention signal, not click-through alone.</div>
+  </div>
+
+  <div id="pre-bot" class="tab-pane">
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="outlier-table">
+        <thead><tr>
+          <th style="padding-left:16px;">Video ID</th>
+          <th>Day</th>
+          <th>Views</th>
+          <th>CTR</th>
+          <th>Avg % Viewed</th>
+          <th>Subs</th>
+          <th>Dur (s)</th>
+          <th>Hashtags</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">xIP112DWxv8</td><td>Tue</td><td class="ot-views" style="color:var(--red);">3</td><td class="ot-ctr">1.87%</td><td class="ot-ret" style="color:var(--red);">70.34%</td><td>0</td><td>149s</td><td>0</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">aCD2rWDWN80</td><td>Thu</td><td class="ot-views" style="color:var(--red);">4</td><td class="ot-ctr">0.00%</td><td class="ot-ret" style="color:var(--red);">53.12%</td><td>0</td><td>149s</td><td>0</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">9BgJPaRGik8</td><td>Fri</td><td class="ot-views" style="color:var(--red);">5</td><td class="ot-ctr">0.00%</td><td class="ot-ret">73.34%</td><td>0</td><td>15s</td><td>1</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">cvxVmUddCB0</td><td>Wed</td><td class="ot-views" style="color:var(--red);">6</td><td class="ot-ctr">0.00%</td><td class="ot-ret" style="color:var(--red);">29.73%</td><td>0</td><td>26s</td><td>1</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">CBZoVKvExK8</td><td>Wed</td><td class="ot-views" style="color:var(--red);">7</td><td class="ot-ctr">0.00%</td><td class="ot-ret">88.75%</td><td>0</td><td>13s</td><td>2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:16px;">Two 149-second videos (nearly 2.5 minutes — not Shorts at all). Zero hashtags, zero CTR, catastrophic retention. Duration is the clearest separator here.</div>
+  </div>
+
+  <div id="post-top" class="tab-pane">
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="outlier-table">
+        <thead><tr>
+          <th style="padding-left:16px;">Video ID</th>
+          <th>Day</th>
+          <th>Views</th>
+          <th>CTR</th>
+          <th>Avg % Viewed</th>
+          <th>Subs</th>
+          <th>Dur (s)</th>
+          <th>Audio</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">gZTVrMjssck</td><td>Sun</td><td class="ot-views">18,250</td><td class="ot-ctr">1.42%</td><td class="ot-ret">120.67%</td><td>90</td><td>13s</td><td style="font-size:11px;color:var(--accent);">Small Creator Struggles</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">FBPY2DPEA-k</td><td>Tue</td><td class="ot-views">10,177</td><td class="ot-ctr">0.87%</td><td class="ot-ret" style="color:var(--red);">82.59%</td><td>7</td><td>18s</td><td style="font-size:11px;color:var(--text3);">Unknown</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">Fx8u1AUY2ak</td><td>Thu</td><td class="ot-views">6,068</td><td class="ot-ctr" style="color:var(--green);">3.09%</td><td class="ot-ret">134.13%</td><td>54</td><td>13s</td><td style="font-size:11px;color:var(--accent3);">Have a great day</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">rTDE_oxMOAo</td><td>Thu</td><td class="ot-views">5,911</td><td class="ot-ctr">0.97%</td><td class="ot-ret">117.04%</td><td>8</td><td>13s</td><td style="font-size:11px;color:var(--accent);">Small Creator Struggles</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-top">T4RjzZmrySY</td><td>Thu</td><td class="ot-views">4,777</td><td class="ot-ctr" style="color:var(--green);">2.70%</td><td class="ot-ret" style="color:var(--green);">199.61%</td><td>4</td><td>8s</td><td style="font-size:11px;">67 is not funnyT_T</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:16px;">POST top performers cluster at 8–13s duration. 3 of 5 are Thursday uploads. 2 of the top 3 used "Small Creator Struggles" audio. Retention >100% on all but one.</div>
+  </div>
+
+  <div id="post-bot" class="tab-pane">
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="outlier-table">
+        <thead><tr>
+          <th style="padding-left:16px;">Video ID</th>
+          <th>Day</th>
+          <th>Views</th>
+          <th>CTR</th>
+          <th>Avg % Viewed</th>
+          <th>Subs</th>
+          <th>Dur (s)</th>
+          <th>Audio</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">21FLDSBGWog</td><td>Mon</td><td class="ot-views" style="color:var(--red);">12</td><td class="ot-ctr">1.89%</td><td class="ot-ret" style="color:var(--red);">78.83%</td><td>0</td><td>16s</td><td style="font-size:11px;color:var(--text3);">Unknown</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">paIh6Rilr8Q</td><td>Fri</td><td class="ot-views" style="color:var(--red);">20</td><td class="ot-ctr" style="color:var(--green);">4.35%</td><td class="ot-ret">105.75%</td><td>0</td><td>16s</td><td style="font-size:11px;color:var(--text3);">Unknown</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">cvfu51agL-M</td><td>Mon</td><td class="ot-views" style="color:var(--red);">69</td><td class="ot-ctr">0.86%</td><td class="ot-ret">111.59%</td><td>0</td><td>15s</td><td style="font-size:11px;">67 is not funnyT_T</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">w-ai2XQjnvc</td><td>Fri</td><td class="ot-views" style="color:var(--red);">199</td><td class="ot-ctr">0.00%</td><td class="ot-ret" style="color:var(--red);">82.88%</td><td>2</td><td>16s</td><td style="font-size:11px;color:var(--text3);">Unknown</td></tr>
+          <tr><td style="padding-left:16px;" class="ot-vid tag-bot">XByUOC7H1Xg</td><td>Tue</td><td class="ot-views" style="color:var(--red);">216</td><td class="ot-ctr">3.57%</td><td class="ot-ret" style="color:var(--red);">47.66%</td><td>1</td><td>16s</td><td style="font-size:11px;color:var(--text3);">Unknown</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:16px;">POST bottom videos cluster at exactly 16 seconds — just above the sweet spot. Some have decent CTR but the algorithm never pushed them. Monday and Friday are the worst-performing days here. All have zero subs.</div>
+  </div>
+</section>
+
+<!-- =========  SECTION: DIAGNOSIS  ========= -->
+<section class="section" id="diagnosis">
+  <div class="section-step">Step 5</div>
+  <h2 class="section-title">RANKED DIAGNOSIS</h2>
+  <p class="section-desc">Three causes. Ranked by evidence weight. Plus what the data can't tell you, and the one finding that would have been invisible without this analysis.</p>
+
+  <div class="grid-3" style="margin-bottom: 28px;">
+    <div class="diagnosis-card primary">
+      <div class="diagnosis-rank">1</div>
+      <div class="diagnosis-label">Primary cause</div>
+      <div class="diagnosis-title">Automation-pattern saturation and homogenization</div>
+      <div class="diagnosis-evidence">
+        Weekly uploads: <span class="evidence-stat">4 → 42</span> at go-live.
+        Title length IQR collapsed to <span class="evidence-stat">47–52 chars</span>.
+        Hashtag count locked to <span class="evidence-stat">exactly 3</span>.
+        Duplicate title stems: median <span class="evidence-stat">1,043 views</span> vs <span class="evidence-stat">1,168</span> for unique stems.
+        The algorithm may be classifying these as repetitive content.
+      </div>
+    </div>
+    <div class="diagnosis-card secondary">
+      <div class="diagnosis-rank">2</div>
+      <div class="diagnosis-label">Secondary cause</div>
+      <div class="diagnosis-title">Retention weakness from clip length drift</div>
+      <div class="diagnosis-evidence">
+        Median avg % viewed fell <span class="evidence-stat">94.48 → 89.72</span> (−4.76 pts).
+        Rendered duration vs retention: <span class="evidence-stat">r=−0.608</span>.
+        POST 15–19s clips average <span class="evidence-stat">92.49%</span> retention vs <span class="evidence-stat">109.84%</span> for 10–14s clips.
+        Retention is the primary Shorts ranking signal.
+      </div>
+    </div>
+    <div class="diagnosis-card tertiary">
+      <div class="diagnosis-rank">3</div>
+      <div class="diagnosis-label">Tertiary cause</div>
+      <div class="diagnosis-title">Subscriber conversion degradation</div>
+      <div class="diagnosis-evidence">
+        Aggregate subs/view: <span class="evidence-stat">0.684% → 0.499%</span> (−27%).
+        Mean subs/video: <span class="evidence-stat">9.98 → 7.29</span>.
+        Likes held steady (1.58% → 1.63%), so this isn't general disengagement — automation may be attracting a less sub-prone audience profile.
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="surprise-box" style="margin-bottom: 20px;">
+    <div class="surprise-label">⚡ Surprise finding</div>
+    <h3>The view numbers look fine. That's the trap.</h3>
+    <p>PRE median views: <span class="stat-highlight">1,073</span> POST median views: <span class="stat-highlight">1,071</span> — nearly identical. Without this analysis, you'd look at views and think automation is working. The decay is in CTR (−24.6%), retention (−4.76 pts median), and subscriber conversion (−27%) — the precursors that predict future view collapse if left unaddressed.</p>
+  </div>
+
+  <div class="blindspot-box">
+    <div class="card-title" style="margin-bottom:14px;">What the data cannot tell us</div>
+    <div class="blindspot-item">
+      <div class="blindspot-dot"></div>
+      <span>Shorts shelf traffic source breakdown — whether views come from Shorts shelf vs search vs suggested surfaces</span>
+    </div>
+    <div class="blindspot-item">
+      <div class="blindspot-dot"></div>
+      <span>Swipe-away rate and exact retention curve shape (not just average percentage)</span>
+    </div>
+    <div class="blindspot-item">
+      <div class="blindspot-dot"></div>
+      <span>First-hour and first-24-hour velocity — critical for diagnosing fast-die patterns</span>
+    </div>
+    <div class="blindspot-item">
+      <div class="blindspot-dot"></div>
+      <span>Rewatch rate — high rewatch signals are a major Shorts distribution trigger</span>
+    </div>
+    <div class="blindspot-item">
+      <div class="blindspot-dot"></div>
+      <span>Whether YouTube is explicitly classifying repeated title/format patterns as repetitive content</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========  SECTION: RECOMMENDATIONS  ========= -->
+<section class="section" id="recs">
+  <div class="section-step">Step 6</div>
+  <h2 class="section-title">ACTION PLAN</h2>
+  <p class="section-desc">Five ranked recommendations. Every one cites a specific number. Every one has a falsifiable 2-week success metric.</p>
+
+  <div style="display: flex; flex-direction: column; gap: 14px;">
+
+    <div class="rec-card">
+      <div class="rec-num">1</div>
+      <div>
+        <div class="rec-area">Upload automation config</div>
+        <div class="rec-title">Cut cadence from 6/day to 3/day for two weeks</div>
+        <div class="rec-evidence">
+          <strong>Evidence (H2):</strong> Weekly uploads jumped 4→42. Within POST, the highest-volume week (48 uploads) had the lowest median views (954) among 3 POST weeks. r=−0.9998 between weekly count and mean views. Keep only the three strongest daily slots: <strong>17:00, 19:00, and 21:00/23:00 IST</strong>.
+        </div>
+        <div class="rec-metric">If this works: POST median views should rise from 1,071 to at least 1,300 within 2 weeks. Aggregate subs/view should rise from 0.499% to at least 0.60%.</div>
+      </div>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-num">2</div>
+      <div>
+        <div class="rec-area">Clip editing</div>
+        <div class="rec-title">Cap rendered clip duration at 14 seconds</div>
+        <div class="rec-evidence">
+          <strong>Evidence (H5 + 4c):</strong> Rendered duration vs retention: r=−0.608. POST 10–14s clips averaged 109.84% retention vs 92.49% for 15–19s. POST top 5 all cluster at 8–13s. POST bottom 5 all cluster at exactly 16s. This is the most consistent signal in the entire dataset.
+        </div>
+        <div class="rec-metric">If this works: median avg % viewed should rise from 89.72% to at least 100% within 2 weeks.</div>
+      </div>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-num">3</div>
+      <div>
+        <div class="rec-area">Title / Metadata</div>
+        <div class="rec-title">Break the template — prevent title stem reuse, vary hashtag count</div>
+        <div class="rec-evidence">
+          <strong>Evidence (H2 + 4d):</strong> POST title IQR collapsed to 47–52 chars and hashtag count locked to exactly 3. Duplicate title stems had median 1,043 views vs 1,168 for unique stems. Videos with 5–6 hashtags had mean views of 2,842 vs 1,266 for exactly 3. Reject hashtag-only titles (6 videos, median 889 views).
+        </div>
+        <div class="rec-metric">If this works: mean CTR should recover from 1.46% to at least 1.80% within 2 weeks.</div>
+      </div>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-num">4</div>
+      <div>
+        <div class="rec-area">Audio pool</div>
+        <div class="rec-title">Weight by goal: double-weight top tracks, pause bottom three</div>
+        <div class="rec-evidence">
+          <strong>Evidence (H7 + 4f):</strong> "Small Creator Struggles" leads reach at 5,275 mean views. "Have a great day" (merged) leads subscriber conversion at ~0.94% subs/view. Weakest tracks ("We can play together" 934, "Hope you have a great day" 960, "He wasn't ready" 989) are dragging the average. Also merge the duplicate "have a great day" / "Have a great day" labels.
+        </div>
+        <div class="rec-metric">If this works: known-audio videos should average at least 2,000 views and 0.70% subs/view within 2 weeks.</div>
+      </div>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-num">5</div>
+      <div>
+        <div class="rec-area">Scheduling</div>
+        <div class="rec-title">Drop 1:00 and 3:00 IST slots first when reducing cadence</div>
+        <div class="rec-evidence">
+          <strong>Evidence (H1 + 4e):</strong> The 0–5 IST hour bucket had median 913 views vs 1,072 for 18–23 IST and 1,235 for 12–17 IST. Automation currently targets 1:00 and 3:00 IST heavily (8–9 jobs each). Friday was the worst-performing weekday (median 884 views). Move freed slots to Thursday (best median: 1,045) and Saturday (1,146).
+        </div>
+        <div class="rec-metric">If this works: evening-slot median views should stay at or above 1,200, and overall POST median should beat 1,071 within 2 weeks.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  FORTNITE SHORTS AUTOPSY · 500 videos · Nov 2023 – May 2026 · cohort split Apr 27, 2026 IST
+</footer>
+
+<script>
+/* ---- WEEKLY UPLOAD TIMELINE ---- */
+(function() {
+  const data = [
+    { w: 'Mar 2', n: 6, pre: true },
+    { w: 'Mar 16', n: 1, pre: true },
+    { w: 'Mar 23', n: 4, pre: true },
+    { w: 'Apr 13', n: 9, pre: true },
+    { w: 'Apr 20', n: 4, pre: true },
+    { w: 'Apr 27', n: 42, pre: false },
+    { w: 'May 4', n: 48, pre: false },
+    { w: 'May 11', n: 30, pre: false },
+  ];
+  const maxN = Math.max(...data.map(d => d.n));
+  const tl = document.getElementById('upload-timeline');
+  data.forEach(d => {
+    const h = Math.max(4, Math.round((d.n / maxN) * 110));
+    const wrap = document.createElement('div');
+    wrap.className = 'week-bar-wrap';
+    wrap.innerHTML = `<div class="week-bar ${d.pre ? 'pre' : 'post'}" style="height:${h}px;" title="${d.w}: ${d.n} uploads"></div><span class="week-label">${d.w}</span>`;
+    tl.appendChild(wrap);
+  });
+})();
+
+/* ---- CHARTS ---- */
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+};
+
+/* Duration vs Retention chart */
+new Chart(document.getElementById('durationRetChart'), {
+  type: 'bar',
+  data: {
+    labels: ['<10s', '10–14s', '15–19s', '20s+'],
+    datasets: [{
+      label: 'Mean Avg % Viewed',
+      data: [160.56, 109.84, 92.49, 56.45],
+      backgroundColor: ['#e8ff47', '#47c8ff', '#a847ff', '#ff4747'],
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 200,
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#5a5a70', font: { family: 'DM Mono', size: 11 }, callback: v => v + '%' }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: '#9090a0', font: { family: 'DM Mono', size: 11 } }
+      }
+    }
+  }
+});
+
+/* Audio track chart */
+new Chart(document.getElementById('audioChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Small Creator Struggles', 'Have a great day', '67 is not funnyT_T', 'Like & Subscribe', 'Do you like fortnite', 'have a great day', "He wasn't ready", 'Hope you have a great day', 'We can play together'],
+    datasets: [{
+      label: 'Mean Views',
+      data: [5275, 2091, 1632, 1557, 1238, 994, 989, 960, 934],
+      backgroundColor: ['#e8ff47','#47c8ff','#9090a0','#9090a0','#9090a0','#ffb347','#ff4747','#ff4747','#ff4747'],
+      borderRadius: 3,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    indexAxis: 'y',
+    scales: {
+      x: {
+        beginAtZero: true,
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#5a5a70', font: { family: 'DM Mono', size: 10 }, callback: v => v.toLocaleString() }
+      },
+      y: {
+        grid: { display: false },
+        ticks: { color: '#9090a0', font: { family: 'DM Mono', size: 10 } }
+      }
+    }
+  }
+});
+
+/* Audio eligibility chart */
+new Chart(document.getElementById('eligChart'), {
+  type: 'line',
+  data: {
+    labels: ['May 9','May 10','May 11','May 12','May 13','May 14','May 15','May 16','May 17'],
+    datasets: [
+      {
+        label: 'Pool size',
+        data: [15,15,15,15,15,15,15,15,15],
+        borderColor: '#5a5a70', borderDash: [4,4], borderWidth: 1.5,
+        pointRadius: 0, tension: 0, fill: false,
+      },
+      {
+        label: 'Eligible count',
+        data: [8.5,9,9.33,9.33,7.5,7.5,8.4,9,9],
+        borderColor: '#47c8ff', borderWidth: 2,
+        pointRadius: 3, pointBackgroundColor: '#47c8ff',
+        tension: 0.3, fill: false,
+      }
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    scales: {
+      y: {
+        min: 0, max: 20,
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#5a5a70', font: { family: 'DM Mono', size: 10 } }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: '#5a5a70', font: { family: 'DM Mono', size: 10 } }
+      }
+    }
+  }
+});
+
+/* ---- TABS ---- */
+function switchTab(btn, filter) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#hyp-tbody tr');
+  rows.forEach(r => {
+    if (filter === 'all') { r.style.display = ''; return; }
+    r.style.display = r.dataset.verdict === filter ? '' : 'none';
+  });
+}
+function switchOutlierTab(btn, id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.closest('.section').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
