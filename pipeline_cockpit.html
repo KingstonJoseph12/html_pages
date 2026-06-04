@@ -1,0 +1,2006 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fortnite Shorts Pipeline Cockpit</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Oxanium:wght@500;600;700&display=swap");
+
+    :root {
+      --bg: #080a09;
+      --bg-2: #101411;
+      --surface: rgba(18, 24, 21, 0.88);
+      --surface-2: rgba(31, 39, 34, 0.82);
+      --surface-3: #151c18;
+      --line: rgba(212, 232, 213, 0.18);
+      --line-strong: rgba(234, 248, 230, 0.34);
+      --text: #f2f5e9;
+      --muted: #a8b2a6;
+      --quiet: #758078;
+      --accent: #a8ff33;
+      --cyan: #31d8ff;
+      --amber: #ffb340;
+      --red: #ff4d3f;
+      --violet: #b48cff;
+      --green: #46f18c;
+      --shadow: rgba(0, 0, 0, 0.44);
+      --font-display: "Oxanium", "Bahnschrift", "Arial Narrow", sans-serif;
+      --font-mono: "IBM Plex Mono", "Cascadia Mono", "Consolas", monospace;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family: var(--font-display);
+      font-size: 16px;
+      line-height: 1.45;
+      letter-spacing: 0;
+      background:
+        linear-gradient(90deg, rgba(168, 255, 51, 0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(168, 255, 51, 0.04) 1px, transparent 1px),
+        linear-gradient(135deg, #080a09 0%, #0e1310 42%, #10120d 100%);
+      background-size: 48px 48px, 48px 48px, auto;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, transparent 0%, rgba(49, 216, 255, 0.08) 28%, transparent 48%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 6px);
+      mix-blend-mode: screen;
+      opacity: 0.72;
+      z-index: -1;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .app-shell {
+      width: min(1680px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.15fr) minmax(520px, 1.85fr) auto;
+      gap: 14px;
+      align-items: stretch;
+      min-height: 128px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(168, 255, 51, 0.08), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      box-shadow: 0 18px 48px var(--shadow);
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topbar::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--cyan), var(--amber), transparent);
+      opacity: 0.85;
+    }
+
+    .brand-block {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 12px;
+      align-content: center;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 54px;
+      height: 54px;
+      border: 1px solid rgba(168, 255, 51, 0.56);
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(145deg, rgba(168, 255, 51, 0.18), rgba(49, 216, 255, 0.1)),
+        #111711;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark svg {
+      width: 34px;
+      height: 34px;
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: -42%;
+      background: conic-gradient(from 100deg, transparent, rgba(168, 255, 51, 0.45), transparent, rgba(49, 216, 255, 0.38), transparent);
+      animation: spin 9s linear infinite;
+    }
+
+    .brand-mark svg {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      line-height: 1.02;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 62ch;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(78px, 1fr));
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .metric {
+      min-height: 82px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(9, 13, 11, 0.72);
+      padding: 10px;
+      display: grid;
+      align-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--metric-color, var(--accent));
+      opacity: 0.82;
+    }
+
+    .metric strong {
+      font-size: 1.45rem;
+      line-height: 1;
+      font-family: var(--font-mono);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      overflow-wrap: anywhere;
+    }
+
+    .snapshot-panel {
+      width: 230px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(14, 17, 14, 0.82);
+      padding: 10px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 8px;
+    }
+
+    .snapshot-panel video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid rgba(242, 245, 233, 0.18);
+      background: #050706;
+    }
+
+    .snapshot-panel .stamp {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr) 344px;
+      gap: 14px;
+      margin-top: 14px;
+      align-items: start;
+    }
+
+    .mode-rail,
+    .inspector,
+    .map-shell,
+    .matrix,
+    .sequence-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 18px 44px var(--shadow);
+    }
+
+    .mode-rail {
+      position: sticky;
+      top: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+
+    .panel-title svg {
+      width: 17px;
+      height: 17px;
+      color: var(--accent);
+    }
+
+    .mode-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .mode-button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.03);
+      padding: 9px;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      text-align: left;
+      min-height: 48px;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .mode-button:hover,
+    .mode-button:focus-visible {
+      border-color: var(--line-strong);
+      background: rgba(255,255,255,0.06);
+      outline: none;
+    }
+
+    .mode-button[aria-pressed="true"] {
+      border-color: var(--mode-color, var(--accent));
+      background: linear-gradient(90deg, color-mix(in srgb, var(--mode-color, var(--accent)) 19%, transparent), rgba(255,255,255,0.035));
+    }
+
+    .mode-icon {
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--mode-color, var(--accent));
+      background: rgba(0,0,0,0.24);
+    }
+
+    .mode-icon svg,
+    .tiny-icon svg,
+    .icon-button svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .mode-copy {
+      min-width: 0;
+    }
+
+    .mode-copy strong {
+      display: block;
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .mode-copy span {
+      display: block;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      overflow-wrap: anywhere;
+    }
+
+    .mode-count {
+      color: var(--quiet);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .search-wrap {
+      display: grid;
+      gap: 6px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .search-box {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(0,0,0,0.28);
+      min-height: 42px;
+      overflow: hidden;
+    }
+
+    .search-box svg {
+      margin-left: 9px;
+      color: var(--muted);
+      width: 15px;
+      height: 15px;
+    }
+
+    .search-box input {
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 10px 10px 10px 4px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--accent);
+    }
+
+    .schedule-stack {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .schedule-slot {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: var(--text);
+      background: rgba(255,255,255,0.035);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 7px 6px;
+      text-align: center;
+    }
+
+    .sequence-panel {
+      margin-bottom: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      background:
+        linear-gradient(90deg, rgba(168,255,51,0.07), transparent 28%),
+        rgba(12, 16, 14, 0.88);
+    }
+
+    .sequence {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(96px, 1fr));
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .sequence-step {
+      min-width: 96px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.035);
+      padding: 8px;
+      display: grid;
+      gap: 5px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .sequence-step::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      width: 9px;
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    .sequence-step:last-child::after {
+      display: none;
+    }
+
+    .sequence-step.active {
+      border-color: var(--accent);
+      background: rgba(168,255,51,0.08);
+    }
+
+    .sequence-step span {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+    }
+
+    .sequence-step strong {
+      font-size: 0.76rem;
+      overflow-wrap: anywhere;
+    }
+
+    .map-shell {
+      min-height: 650px;
+      overflow: auto;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.045), transparent 18%),
+        radial-gradient(ellipse at 20% 0%, rgba(168,255,51,0.11), transparent 32%),
+        radial-gradient(ellipse at 90% 22%, rgba(255,179,64,0.09), transparent 34%),
+        rgba(8, 12, 10, 0.9);
+    }
+
+    .map-canvas {
+      position: relative;
+      min-height: 650px;
+      min-width: 900px;
+      isolation: isolate;
+    }
+
+    .map-grid-label {
+      position: absolute;
+      left: 16px;
+      top: 14px;
+      color: rgba(242,245,233,0.28);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      pointer-events: none;
+    }
+
+    .lane-label {
+      position: absolute;
+      left: 16px;
+      color: rgba(242,245,233,0.4);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding-left: 8px;
+      border-left: 2px solid rgba(168,255,51,0.35);
+      pointer-events: none;
+    }
+
+    .flow-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .flow-link {
+      fill: none;
+      stroke: rgba(168,255,51,0.28);
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+      transition: opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease, filter 180ms ease;
+    }
+
+    .flow-link.support {
+      opacity: 0.22;
+      stroke-dasharray: 7 8;
+      animation: dash 11s linear infinite;
+    }
+
+    .flow-link.dim {
+      opacity: 0.06;
+      animation: none;
+    }
+
+    .flow-link.route {
+      opacity: 0.92;
+      stroke: var(--link-color, var(--accent));
+      stroke-width: 2.7;
+      filter: drop-shadow(0 0 6px color-mix(in srgb, var(--link-color, var(--accent)) 38%, transparent));
+      animation: dash 8s linear infinite;
+    }
+
+    .flow-link.selected {
+      stroke: var(--cyan);
+      stroke-width: 3.2;
+      opacity: 1;
+      filter: drop-shadow(0 0 8px rgba(49, 216, 255, 0.55));
+    }
+
+    .flow-port {
+      fill: var(--link-color, var(--accent));
+      stroke: rgba(8, 12, 10, 0.96);
+      stroke-width: 2;
+      opacity: 0.94;
+      filter: drop-shadow(0 0 6px color-mix(in srgb, var(--link-color, var(--accent)) 42%, transparent));
+    }
+
+    .node {
+      position: absolute;
+      z-index: 2;
+      width: 148px;
+      min-height: 76px;
+      transform: translate(-50%, -50%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+        rgba(11, 15, 13, 0.93);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.34);
+      padding: 9px;
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 8px;
+      align-items: start;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 160ms ease, border-color 160ms ease, opacity 160ms ease, background 160ms ease;
+    }
+
+    .node:hover,
+    .node:focus-visible {
+      border-color: var(--node-color, var(--accent));
+      outline: none;
+      transform: translate(-50%, -50%) translateY(-2px);
+    }
+
+    .node.active {
+      border-color: var(--node-color, var(--accent));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--node-color, var(--accent)) 45%, transparent), 0 18px 32px rgba(0,0,0,0.46);
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--node-color, var(--accent)) 14%, transparent), rgba(255,255,255,0.03)),
+        rgba(11, 15, 13, 0.98);
+    }
+
+    .node.route-node {
+      border-color: color-mix(in srgb, var(--node-color, var(--accent)) 58%, var(--line));
+    }
+
+    .node.support-node {
+      opacity: 0.48;
+    }
+
+    .node.dim {
+      opacity: 0.14;
+    }
+
+    .node.off-mode {
+      opacity: 0.035;
+      pointer-events: none;
+      filter: grayscale(0.9);
+    }
+
+    .node.search-hide {
+      opacity: 0.08;
+      filter: grayscale(0.7);
+    }
+
+    .node-glyph {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 6px;
+      background: rgba(0,0,0,0.22);
+      color: var(--node-color, var(--accent));
+      position: relative;
+    }
+
+    .node-glyph::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border: 1px solid color-mix(in srgb, var(--node-color, var(--accent)) 38%, transparent);
+      border-radius: 8px;
+      opacity: 0;
+    }
+
+    .node.active .node-glyph::after {
+      animation: ping 1.8s ease-out infinite;
+    }
+
+    .node-glyph svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .node-text {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .node-text strong {
+      font-size: 0.78rem;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .node-text span {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.63rem;
+      line-height: 1.28;
+      overflow-wrap: anywhere;
+    }
+
+    .node-badge {
+      grid-column: 1 / -1;
+      color: var(--quiet);
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      border-top: 1px solid rgba(255,255,255,0.09);
+      padding-top: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .inspector {
+      position: sticky;
+      top: 14px;
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), transparent 24%),
+        rgba(17, 22, 19, 0.92);
+    }
+
+    .inspector-head {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      align-items: start;
+      min-width: 0;
+    }
+
+    .inspector-icon {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      background: rgba(0,0,0,0.26);
+    }
+
+    .inspector-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .inspector h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
+
+    .inspector .kicker {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      overflow-wrap: anywhere;
+    }
+
+    .inspector p {
+      margin: 0;
+      color: #cbd4c5;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .detail-row {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      padding: 9px;
+      background: rgba(255,255,255,0.03);
+      display: grid;
+      gap: 5px;
+    }
+
+    .detail-row strong {
+      color: var(--text);
+      font-size: 0.78rem;
+    }
+
+    .detail-row span,
+    .detail-row code {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      overflow-wrap: anywhere;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 6px;
+      padding: 4px 6px;
+      background: rgba(0,0,0,0.24);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      overflow-wrap: anywhere;
+    }
+
+    .inspector-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .icon-button {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.04);
+      height: 40px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .icon-button:hover,
+    .icon-button:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(168,255,51,0.07);
+      outline: none;
+    }
+
+    .icon-button::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      width: max-content;
+      max-width: 220px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #111611;
+      color: var(--text);
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 150ms ease, transform 150ms ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.38);
+      z-index: 8;
+    }
+
+    .icon-button:hover::after,
+    .icon-button:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .matrix {
+      margin-top: 14px;
+      padding: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.045), transparent 18%),
+        rgba(13, 17, 15, 0.92);
+    }
+
+    .matrix-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .module-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.035);
+      min-height: 174px;
+      padding: 12px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .module-card:hover {
+      border-color: var(--module-color, var(--line-strong));
+      background: rgba(255,255,255,0.055);
+      transform: translateY(-2px);
+    }
+
+    .module-head {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tiny-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--module-color, var(--accent));
+      background: rgba(0,0,0,0.22);
+    }
+
+    .module-card h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
+
+    .module-card p {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .mini-meter {
+      height: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.24);
+    }
+
+    .mini-meter span {
+      display: block;
+      height: 100%;
+      width: var(--fill, 50%);
+      background: linear-gradient(90deg, var(--module-color, var(--accent)), color-mix(in srgb, var(--module-color, var(--accent)) 45%, white));
+    }
+
+    .cmd-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .cmd-chip {
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 6px;
+      padding: 5px 7px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.22);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      overflow-wrap: anywhere;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -24;
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes ping {
+      0% {
+        opacity: 0.7;
+        transform: scale(0.86);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.24);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
+    @media (max-width: 1280px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .snapshot-panel {
+        width: 100%;
+        grid-template-columns: 230px 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+      }
+
+      .snapshot-panel video {
+        grid-row: 1 / 3;
+      }
+
+      .layout {
+        grid-template-columns: 220px minmax(0, 1fr);
+      }
+
+      .inspector {
+        grid-column: 1 / -1;
+        position: static;
+      }
+
+      .matrix-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell {
+        padding: 10px;
+      }
+
+      .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .snapshot-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .snapshot-panel video {
+        grid-row: auto;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .mode-rail {
+        position: static;
+      }
+
+      .mode-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sequence {
+        grid-template-columns: repeat(6, 132px);
+      }
+
+      .matrix-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .inspector-actions {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.45rem;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .mode-list,
+      .schedule-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 12h14"></path>
+            <path d="M14 5l7 7-7 7"></path>
+            <path d="M3 6h4"></path>
+            <path d="M3 18h4"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">Creator automation map</p>
+          <h1>Fortnite Shorts Pipeline Cockpit</h1>
+          <p class="subtitle">A visual control surface for scheduler slots, Drive sync, FFmpeg rendering, YouTube upload paths, manual buffer handling, Telegram, and delayed comment lanes.</p>
+        </div>
+      </div>
+
+      <div class="metric-grid" id="metricGrid" aria-label="Local pipeline snapshot"></div>
+
+      <aside class="snapshot-panel" aria-label="Render media preview">
+        <div class="stamp">
+          <span>Preview asset</span>
+          <span>ishowspeed-invite.mp4</span>
+        </div>
+        <video src="ishowspeed-invite.mp4" autoplay muted loop playsinline aria-label="Existing green screen overlay video asset"></video>
+        <div class="stamp">
+          <span>Snapshot</span>
+          <span>2026-06-04 22:26 IST</span>
+        </div>
+      </aside>
+    </header>
+
+    <main class="layout">
+      <aside class="mode-rail" aria-label="Flow modes">
+        <h2 class="panel-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path><path d="M8 4v16"></path></svg>
+          Flow Lens
+        </h2>
+        <div class="mode-list" id="modeList"></div>
+
+        <div class="search-wrap">
+          <label class="sr-only" for="nodeSearch">Search components</label>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+            <input id="nodeSearch" type="search" placeholder="Search components" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="schedule-stack" aria-label="Upload schedule in IST">
+          <span class="schedule-slot">17:00 IST</span>
+          <span class="schedule-slot">19:00 IST</span>
+          <span class="schedule-slot">21:00 IST</span>
+          <span class="schedule-slot">23:00 IST</span>
+          <span class="schedule-slot">01:00 IST</span>
+          <span class="schedule-slot">03:00 IST</span>
+        </div>
+      </aside>
+
+      <section aria-label="Interactive pipeline map">
+        <div class="sequence-panel">
+          <div class="matrix-head">
+            <h2 class="panel-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"></path><path d="M4 12h7"></path><path d="M11 7l5 5-5 5"></path><path d="M17 5h3v14h-3"></path></svg>
+              Active Route
+            </h2>
+            <div class="cmd-strip" id="commandStrip"></div>
+          </div>
+          <div class="sequence" id="sequence"></div>
+        </div>
+
+        <div class="map-shell">
+          <div class="map-canvas" id="mapCanvas">
+            <div class="map-grid-label">FORTNITE.PIPELINE / SYSTEM VIEW</div>
+            <div class="lane-label" style="top: 13%;">entry</div>
+            <div class="lane-label" style="top: 34%;">queue and render</div>
+            <div class="lane-label" style="top: 57%;">publish and buffer</div>
+            <div class="lane-label" style="top: 78%;">notify and lifecycle</div>
+            <svg class="flow-svg" id="flowSvg" viewBox="0 0 900 650" aria-hidden="true">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"></path>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <aside class="inspector" id="inspector" aria-live="polite"></aside>
+    </main>
+
+    <section class="matrix" aria-label="Component matrix">
+      <div class="matrix-head">
+        <h2 class="panel-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v6H5z"></path><path d="M13 5h6v6h-6z"></path><path d="M5 13h6v6H5z"></path><path d="M13 13h6v6h-6z"></path></svg>
+          Component Matrix
+        </h2>
+        <div class="cmd-strip">
+          <span class="cmd-chip">python scheduler.py</span>
+          <span class="cmd-chip">python run_now.py --status</span>
+          <span class="cmd-chip">python run_now.py --generate-buffer</span>
+          <span class="cmd-chip">python run_now.py --process-auto-comments</span>
+        </div>
+      </div>
+      <div class="matrix-grid" id="moduleGrid"></div>
+    </section>
+  </div>
+
+  <script>
+    const icons = {
+      route: '<path d="M4 6h4c3 0 3 5 6 5h6"></path><path d="M16 7l4 4-4 4"></path><path d="M4 18h6"></path>',
+      clock: '<circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path>',
+      terminal: '<path d="M5 7l4 5-4 5"></path><path d="M11 17h8"></path>',
+      lock: '<rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path>',
+      drive: '<path d="M8 4h8l5 9-4 7H7l-4-7z"></path><path d="M7 20l5-9h9"></path><path d="M3 13h10"></path>',
+      db: '<ellipse cx="12" cy="6" rx="7" ry="3"></ellipse><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"></path><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"></path>',
+      filter: '<path d="M4 5h16l-6 7v5l-4 2v-7z"></path>',
+      video: '<rect x="4" y="6" width="13" height="12" rx="2"></rect><path d="M17 10l4-2v8l-4-2"></path>',
+      audio: '<path d="M8 18V6l10-2v12"></path><circle cx="6" cy="18" r="2"></circle><circle cx="16" cy="16" r="2"></circle>',
+      wand: '<path d="M4 20L20 4"></path><path d="M15 4h5v5"></path><path d="M7 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"></path>',
+      upload: '<path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M5 20h14"></path>',
+      youtube: '<rect x="3" y="7" width="18" height="10" rx="3"></rect><path d="M10 10l5 2-5 2z"></path>',
+      message: '<path d="M5 6h14v10H8l-4 4V6z"></path>',
+      archive: '<path d="M4 7h16"></path><path d="M6 7v13h12V7"></path><path d="M8 4h8l2 3H6z"></path><path d="M10 12h4"></path>',
+      branch: '<circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="12" cy="18" r="2"></circle><path d="M8 6h10"></path><path d="M12 8v10"></path>',
+      comment: '<path d="M4 6h16v11H7l-3 3z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path>',
+      status: '<path d="M4 12h4l2-7 4 14 2-7h4"></path>',
+      cache: '<path d="M6 6h12v5H6z"></path><path d="M6 13h12v5H6z"></path><path d="M8 8h.01"></path><path d="M8 15h.01"></path>',
+      alert: '<path d="M12 4l9 16H3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path>',
+      search: '<circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path>',
+      focus: '<path d="M8 4H5a1 1 0 0 0-1 1v3"></path><path d="M16 4h3a1 1 0 0 1 1 1v3"></path><path d="M20 16v3a1 1 0 0 1-1 1h-3"></path><path d="M8 20H5a1 1 0 0 1-1-1v-3"></path><circle cx="12" cy="12" r="3"></circle>',
+      copy: '<rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect>'
+    };
+
+    const colors = {
+      overview: '#a8ff33',
+      upload: '#31d8ff',
+      buffer: '#ffb340',
+      render: '#46f18c',
+      providers: '#b48cff',
+      comments: '#ff7a59',
+      status: '#f2f5e9'
+    };
+
+    const metrics = [
+      { label: 'Jobs tracked', value: 277, color: '#f2f5e9' },
+      { label: 'Uploaded Shorts', value: 223, color: '#46f18c' },
+      { label: 'Pending raw', value: 18, color: '#31d8ff' },
+      { label: 'Buffered now', value: 6, color: '#ffb340' },
+      { label: 'Audio MP3 pool', value: 14, color: '#b48cff' },
+      { label: 'Local renders', value: 7, color: '#ff4d3f' }
+    ];
+
+    const modes = [
+      { id: 'overview', label: 'Overview', note: 'whole machine', icon: 'route', color: colors.overview },
+      { id: 'upload', label: 'Upload Slot', note: 'scheduled Short', icon: 'clock', color: colors.upload },
+      { id: 'buffer', label: 'Manual Buffer', note: 'extra renders', icon: 'archive', color: colors.buffer },
+      { id: 'render', label: 'Render Core', note: 'FFmpeg path', icon: 'wand', color: colors.render },
+      { id: 'providers', label: 'Providers', note: 'YouTube routes', icon: 'upload', color: colors.providers },
+      { id: 'comments', label: 'Comments', note: 'delayed lanes', icon: 'comment', color: colors.comments },
+      { id: 'status', label: 'Lifecycle', note: 'job states', icon: 'status', color: colors.status }
+    ];
+
+    const nodes = [
+      {
+        id: 'scheduler', label: 'scheduler.py', short: 'IST cron slots', lane: 'entry', icon: 'clock', x: 10, y: 16,
+        modes: ['overview', 'upload', 'buffer', 'comments'], code: 'scheduler.py:main',
+        detail: 'BlockingScheduler creates six upload slots, optional daily manual-buffer generation, Telegram command polling, and due auto-comment polling.',
+        inputs: ['UPLOAD_SCHEDULE_IST', 'MANUAL_BUFFER_SCHEDULE_IST', 'poll intervals'],
+        outputs: ['run_next_job(upload=True)', 'generate_manual_buffer()', 'poll_telegram_commands()', 'process_due_auto_comments()'],
+        watch: 'max_instances=1 is paired with the pipeline lock so slow encodes do not overlap.'
+      },
+      {
+        id: 'cli', label: 'run_now.py', short: 'manual routes', lane: 'entry', icon: 'terminal', x: 10, y: 31,
+        modes: ['overview', 'upload', 'buffer', 'providers', 'comments', 'status'], code: 'run_now.py:main',
+        detail: 'Manual operator surface for status, ingest-only, process-only, generate-buffer, retry-upload, setup checks, Telegram tests, and auto-comment processing.',
+        inputs: ['CLI flags', 'jobs.db', 'local folders'],
+        outputs: ['queue mutations', 'one-off renders', 'provider checks', 'status printout'],
+        watch: 'Retry paths intentionally skip normal render work when an existing rendered output can be reused.'
+      },
+      {
+        id: 'lock', label: 'Run Lock', short: 'single worker gate', lane: 'entry', icon: 'lock', x: 25, y: 22,
+        modes: ['overview', 'upload', 'buffer', 'comments'], code: 'pipeline.py:run_lock',
+        detail: 'Prevents overlapping scheduler and CLI work from processing more than one clip at a time.',
+        inputs: ['jobs.db.lock'],
+        outputs: ['acquired pass', 'skip when busy'],
+        watch: 'This is the concurrency spine for uploads, buffers, input cleanup, and comments.'
+      },
+      {
+        id: 'preflight', label: 'Preflight', short: 'init, recover, sync', lane: 'entry', icon: 'route', x: 39, y: 22,
+        modes: ['overview', 'upload', 'buffer'], code: 'pipeline.py:run_next_job',
+        detail: 'Initializes schema, recovers stale processing rows, syncs Drive audio, ingests clips, then cleans completed local input files.',
+        inputs: ['jobs.db', 'Drive audio', 'Drive/local input'],
+        outputs: ['fresh queue view', 'local audio pool', 'clean input cache'],
+        watch: 'Most later decisions assume preflight has reconciled Drive state first.'
+      },
+      {
+        id: 'drive_input', label: 'Drive input/', short: 'raw clip source', lane: 'stores', icon: 'drive', x: 55, y: 12,
+        modes: ['overview', 'upload', 'buffer'], code: 'RCLONE_INPUT_DIR',
+        detail: 'When rclone is configured, Drive input is the source of truth for raw clips. Local input becomes a temporary working cache.',
+        inputs: ['.mp4', '.mov'],
+        outputs: ['remote listing', 'download selected file', 'archive or reject moves'],
+        watch: 'Deleting a remote pending clip marks that queued row as skipped on the next ingest.'
+      },
+      {
+        id: 'audio_pool', label: 'audio/', short: 'MP3 shuffle pool', lane: 'stores', icon: 'audio', x: 72, y: 12,
+        modes: ['overview', 'render'], code: 'pipeline.py:pick_audio',
+        detail: 'MP3 filenames carry overlay text and duration metadata. The pool is rescanned every render after optional Drive sync.',
+        inputs: ['audio/*.mp3', '[no-text] prefix', 'duration in filename'],
+        outputs: ['selected audio', 'overlay label', 'selection metadata'],
+        watch: 'The current local folder has 14 MP3 files.'
+      },
+      {
+        id: 'db', label: 'jobs.db', short: 'queue memory', lane: 'stores', icon: 'db', x: 86, y: 23,
+        modes: ['overview', 'upload', 'buffer', 'comments', 'status'], code: 'pipeline.py:init_db',
+        detail: 'SQLite stores clip status, output paths, YouTube IDs, titles, audio metadata, timings, buffer names, and comment lane status.',
+        inputs: ['inserted clips', 'status transitions', 'upload/comment results'],
+        outputs: ['selection rows', 'status reports', 'analytics fields'],
+        watch: 'Local snapshot: pending 18, buffered 6, done 223, manual_done 4, processed 1, skipped 25.'
+      },
+      {
+        id: 'ingest', label: 'Ingest', short: 'scan and reconcile', lane: 'queue', icon: 'filter', x: 19, y: 42,
+        modes: ['overview', 'upload', 'buffer'], code: 'pipeline.py:ingest_new_clips',
+        detail: 'Lists Drive or local input, rejects blocked filenames, inserts new jobs, requeues certain missing-output duplicates, and removes stale local cache.',
+        inputs: ['supported videos', 'SKIP_WORDS', 'existing rows'],
+        outputs: ['pending jobs', 'skipped rows', 'rejected archives'],
+        watch: 'Skip tokens reject filenames like Eliminated while keeping words such as Elimination.'
+      },
+      {
+        id: 'select', label: 'Select Job', short: 'priority then random', lane: 'queue', icon: 'branch', x: 36, y: 42,
+        modes: ['overview', 'upload', 'buffer', 'render'], code: 'pipeline.py:select_pending_job',
+        detail: 'Picks from the highest-priority pending tier, randomized by default, or FIFO when RANDOMIZE_PENDING_JOBS=false.',
+        inputs: ['pending jobs', 'priority', 'randomization flag'],
+        outputs: ['one selected filename and job id'],
+        watch: 'This is the point where a scheduled slot becomes one specific Short.'
+      },
+      {
+        id: 'download', label: 'Download Clip', short: 'remote to local', lane: 'queue', icon: 'drive', x: 53, y: 42,
+        modes: ['overview', 'upload', 'buffer', 'render'], code: 'pipeline.py:download_input_clip',
+        detail: 'Downloads the selected raw clip from Drive input to local input when needed. Local-only setups skip the rclone copy.',
+        inputs: ['selected filename', 'RCLONE_INPUT_DIR'],
+        outputs: ['seekable local video file'],
+        watch: 'Download failure marks the job failed and notifies Telegram.'
+      },
+      {
+        id: 'render', label: 'process_clip', short: 'FFmpeg transform', lane: 'render', icon: 'wand', x: 68, y: 42,
+        modes: ['overview', 'upload', 'buffer', 'render'], code: 'pipeline.py:process_clip',
+        detail: 'Reads metadata, decides portrait passthrough, chooses audio, builds overlay text, adds subscriber count when available, and renders an MP4.',
+        inputs: ['local input clip', 'audio selection', 'overlay asset', 'subscriber count'],
+        outputs: ['output/short_*.mp4', 'render metadata'],
+        watch: 'Default output is a YouTube-friendly 1080x1920 H.264/AAC Short.'
+      },
+      {
+        id: 'ffprobe', label: 'ffprobe', short: 'duration and shape', lane: 'render', icon: 'video', x: 68, y: 28,
+        modes: ['overview', 'render'], code: 'pipeline.py:get_video_metadata',
+        detail: 'Captures duration, dimensions, rotation, and audio stream presence so portrait inputs and normal raw clips can take different paths.',
+        inputs: ['local input clip'],
+        outputs: ['VideoMetadata'],
+        watch: 'Portrait manual clips skip trim, resize/crop, and green-screen overlay.'
+      },
+      {
+        id: 'overlay', label: 'Overlays', short: 'text, subs, invite', lane: 'render', icon: 'video', x: 84, y: 42,
+        modes: ['overview', 'render'], code: 'pipeline.py:build_video_filter',
+        detail: 'Combines color grading, top text from the audio label or filename, subscriber goal text, and the green-screen invite layer.',
+        inputs: ['ishowspeed-invite.mp4', 'audio label', 'subscriber settings'],
+        outputs: ['FFmpeg filter graph'],
+        watch: 'Green-screen overlay starts around 25 percent of the rendered clip unless portrait passthrough disables it.'
+      },
+      {
+        id: 'title', label: 'Title Picker', short: 'captions plus hashtags', lane: 'publish', icon: 'message', x: 19, y: 60,
+        modes: ['overview', 'upload', 'providers'], code: 'pipeline.py:pick_youtube_title',
+        detail: 'Picks a title stem from ytcaptions.txt when available, avoids recently used stems for 14 days, and adds required plus optional hashtags.',
+        inputs: ['ytcaptions.txt', 'recent uploaded titles', 'filename fallback'],
+        outputs: ['YouTube title under 100 chars'],
+        watch: 'Mandatory hashtags include #fortnite and #macfnyt.'
+      },
+      {
+        id: 'upload', label: 'Upload Flow', short: 'provider router', lane: 'publish', icon: 'upload', x: 36, y: 60,
+        modes: ['overview', 'upload', 'providers'], code: 'pipeline.py:upload_to_youtube',
+        detail: 'Records upload start, routes to the configured backend, handles fallback logic, and returns a YouTube ID on success.',
+        inputs: ['rendered MP4', 'title', 'UPLOAD_BACKEND'],
+        outputs: ['youtube_id or failed upload state'],
+        watch: 'Ambiguous Composio failures avoid fallback to reduce duplicate upload risk.'
+      },
+      {
+        id: 'providers', label: 'Providers', short: 'Composio, API, webhook', lane: 'publish', icon: 'branch', x: 53, y: 60,
+        modes: ['overview', 'providers', 'upload'], code: 'pipeline.py:upload_with_backend',
+        detail: 'Supports Composio multipart, Composio access-token YouTube API, direct Google OAuth API, Pipedream webhook, and Composio proxy fallback.',
+        inputs: ['provider config', 'tokens/accounts', 'rendered media'],
+        outputs: ['provider-specific upload attempt'],
+        watch: 'Pipedream fallback is only tried for failures known to happen before YouTube accepted upload.'
+      },
+      {
+        id: 'cache', label: 'upload_cache/', short: 'proxy staging', lane: 'publish', icon: 'cache', x: 69, y: 63,
+        modes: ['overview', 'providers'], code: 'RCLONE_UPLOAD_CACHE_DIR',
+        detail: 'Stages rendered files in Drive when the Composio proxy fallback needs a downloadable media URL.',
+        inputs: ['local rendered MP4'],
+        outputs: ['temporary Drive file', 'normalized download URL'],
+        watch: 'Cache files are deleted in a finally block after proxy upload attempts.'
+      },
+      {
+        id: 'youtube', label: 'YouTube Shorts', short: 'public destination', lane: 'publish', icon: 'youtube', x: 86, y: 60,
+        modes: ['overview', 'upload', 'providers', 'comments'], code: 'youtube.com/shorts/{id}',
+        detail: 'The upload destination. A returned YouTube ID drives success marking, Telegram notifications, archive, and comment scheduling.',
+        inputs: ['video', 'title', 'description', 'privacy status', 'tags'],
+        outputs: ['youtube_id', 'youtube_url'],
+        watch: 'Current database snapshot has 223 jobs with stored YouTube IDs.'
+      },
+      {
+        id: 'manual_gen', label: 'Generate Buffer', short: 'daily or CLI batch', lane: 'buffer', icon: 'archive', x: 19, y: 73,
+        modes: ['overview', 'buffer'], code: 'pipeline.py:generate_manual_buffer',
+        detail: 'Renders extra Shorts into Drive manual_buffer using an explicit CLI count or daily randomized min/max count.',
+        inputs: ['pending jobs', 'MANUAL_BUFFER_DAILY_MIN/MAX'],
+        outputs: ['buffered jobs', 'Drive manual_buffer MP4s'],
+        watch: 'The buffer path still uses preflight, queue selection, download, and process_clip.'
+      },
+      {
+        id: 'manual_folder', label: 'manual_buffer/', short: 'human handoff', lane: 'buffer', icon: 'drive', x: 36, y: 77,
+        modes: ['overview', 'buffer'], code: 'RCLONE_MANUAL_BUFFER_DIR',
+        detail: 'Drive folder containing rendered Shorts that can be manually uploaded or consumed by the next automated upload slot.',
+        inputs: ['rendered buffer files'],
+        outputs: ['manual upload opportunity', 'auto-upload candidate'],
+        watch: 'Six jobs are currently buffered in the local database snapshot.'
+      },
+      {
+        id: 'buffer_upload', label: 'Buffered Upload', short: 'slot consumes buffer', lane: 'buffer', icon: 'upload', x: 53, y: 77,
+        modes: ['overview', 'buffer', 'upload'], code: 'pipeline.py:upload_buffered_job',
+        detail: 'If a buffered file still exists in Drive manual_buffer, an upload slot uses it before rendering a fresh raw clip.',
+        inputs: ['buffered row', 'remote buffer listing'],
+        outputs: ['normal upload flow', 'buffer file deletion after archive'],
+        watch: 'This path skips the expensive render because the Short already exists.'
+      },
+      {
+        id: 'manual_done', label: 'manual_done', short: 'deleted buffer file', lane: 'buffer', icon: 'status', x: 69, y: 77,
+        modes: ['overview', 'buffer', 'status'], code: 'pipeline.py:reconcile_manual_buffer_jobs',
+        detail: 'When you manually upload a buffered Short and delete it from Drive manual_buffer, the next reconciliation marks the row manual_done and archives the original.',
+        inputs: ['missing buffer file', 'buffered row'],
+        outputs: ['manual_done status', 'archived original'],
+        watch: 'This makes manual uploads visible in the same lifecycle as automated uploads.'
+      },
+      {
+        id: 'archive', label: 'Archive', short: 'processed stores', lane: 'notify', icon: 'archive', x: 86, y: 77,
+        modes: ['overview', 'upload', 'buffer', 'status'], code: 'pipeline.py:archive_original',
+        detail: 'Moves uploaded originals and rendered outputs to processed folders locally and, when configured, in Drive.',
+        inputs: ['original filename', 'rendered output'],
+        outputs: ['processed/uploaded_originals', 'processed/rendered_shorts', 'Drive processed'],
+        watch: 'Remote input cleanup is confirmed before local working copies are removed.'
+      },
+      {
+        id: 'telegram', label: 'Telegram', short: 'status and subs', lane: 'notify', icon: 'message', x: 19, y: 91,
+        modes: ['overview', 'upload', 'buffer', 'comments'], code: 'pipeline.py:send_telegram',
+        detail: 'Sends upload success, manual buffer ready, empty queue, and processing error messages. Also accepts subscriber count updates.',
+        inputs: ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', '/subs commands'],
+        outputs: ['operator notifications', 'settings.subscriber_count overrides'],
+        watch: 'Command polling defaults to every 15 seconds when enabled.'
+      },
+      {
+        id: 'comment_schedule', label: 'Schedule Comments', short: 'delay after upload', lane: 'notify', icon: 'comment', x: 38, y: 91,
+        modes: ['overview', 'comments'], code: 'pipeline.py:schedule_auto_comment',
+        detail: 'After a successful upload, enabled comment lanes get pending due times using randomized delays.',
+        inputs: ['youtube_id', 'enabled lanes'],
+        outputs: ['auto_comment_due_at', 'auto_comment2_due_at'],
+        watch: 'Lane one defaults to 5-10 minutes; lane two defaults to 13-17 minutes.'
+      },
+      {
+        id: 'comment_worker', label: 'Comment Worker', short: 'due jobs poller', lane: 'notify', icon: 'comment', x: 55, y: 91,
+        modes: ['overview', 'comments'], code: 'pipeline.py:process_due_auto_comments',
+        detail: 'Claims due rows, chooses recent-text-safe comments, posts through a distinct Composio account, and records posted or retry state.',
+        inputs: ['ytcomments.txt', 'ytcomments2.txt', 'Composio comment accounts'],
+        outputs: ['posted comment IDs', 'retry due times', 'failed comment rows'],
+        watch: 'Each lane has independent attempts, delay windows, text history, and connection config.'
+      },
+      {
+        id: 'failure', label: 'Failure Path', short: 'safe retry state', lane: 'notify', icon: 'alert', x: 72, y: 91,
+        modes: ['overview', 'providers', 'status', 'comments'], code: 'pipeline.py:mark_job',
+        detail: 'Download, render, upload, and comment failures record error state and usually notify Telegram while preserving enough data for retry.',
+        inputs: ['exception or provider result', 'job id'],
+        outputs: ['failed row', 'pending retry row', 'Drive output copy when available'],
+        watch: 'Failed rendered outputs can be retried without rendering again.'
+      },
+      {
+        id: 'lifecycle', label: 'Status Lifecycle', short: 'pending to done', lane: 'notify', icon: 'status', x: 88, y: 91,
+        modes: ['overview', 'status'], code: 'PIPELINE_DIAGRAM.md',
+        detail: 'A job can move through pending, processing, processed, buffered, manual_done, done, failed, and skipped states.',
+        inputs: ['queue decisions', 'render results', 'upload results', 'buffer reconciliation'],
+        outputs: ['operator-readable queue status'],
+        watch: 'processed and failed rows can return to pending through CLI requeue commands.'
+      }
+    ];
+
+    const edges = [
+      ['scheduler', 'lock', ['overview', 'upload', 'buffer', 'comments']],
+      ['cli', 'lock', ['overview', 'upload', 'buffer', 'comments']],
+      ['lock', 'preflight', ['overview', 'upload', 'buffer']],
+      ['preflight', 'drive_input', ['overview', 'upload', 'buffer']],
+      ['preflight', 'audio_pool', ['overview', 'render']],
+      ['preflight', 'ingest', ['overview', 'upload', 'buffer']],
+      ['ingest', 'db', ['overview', 'upload', 'buffer', 'status']],
+      ['db', 'select', ['overview', 'upload', 'buffer', 'render']],
+      ['select', 'download', ['overview', 'upload', 'buffer', 'render']],
+      ['download', 'render', ['overview', 'upload', 'buffer', 'render']],
+      ['ffprobe', 'render', ['overview', 'render']],
+      ['audio_pool', 'render', ['overview', 'render']],
+      ['render', 'overlay', ['overview', 'render']],
+      ['overlay', 'title', ['overview', 'upload']],
+      ['title', 'upload', ['overview', 'upload', 'providers']],
+      ['upload', 'providers', ['overview', 'upload', 'providers']],
+      ['providers', 'cache', ['overview', 'providers']],
+      ['providers', 'youtube', ['overview', 'upload', 'providers']],
+      ['cache', 'youtube', ['overview', 'providers']],
+      ['youtube', 'archive', ['overview', 'upload', 'buffer', 'status']],
+      ['archive', 'telegram', ['overview', 'upload', 'buffer']],
+      ['archive', 'comment_schedule', ['overview', 'comments']],
+      ['comment_schedule', 'comment_worker', ['overview', 'comments']],
+      ['comment_worker', 'youtube', ['overview', 'comments']],
+      ['comment_worker', 'db', ['overview', 'comments', 'status']],
+      ['upload', 'failure', ['overview', 'providers', 'status']],
+      ['failure', 'telegram', ['overview', 'upload', 'providers', 'comments']],
+      ['manual_gen', 'select', ['overview', 'buffer']],
+      ['render', 'manual_folder', ['overview', 'buffer']],
+      ['manual_folder', 'buffer_upload', ['overview', 'buffer', 'upload']],
+      ['buffer_upload', 'title', ['overview', 'buffer', 'upload']],
+      ['manual_folder', 'manual_done', ['overview', 'buffer', 'status']],
+      ['manual_done', 'archive', ['overview', 'buffer', 'status']],
+      ['db', 'lifecycle', ['overview', 'status']],
+      ['failure', 'lifecycle', ['overview', 'status']],
+      ['archive', 'lifecycle', ['overview', 'status']]
+    ].map(([from, to, modes]) => ({ from, to, modes }));
+
+    const routeSequences = {
+      overview: ['scheduler', 'lock', 'preflight', 'ingest', 'db', 'select', 'download', 'render', 'overlay', 'title', 'upload', 'providers', 'youtube', 'archive', 'telegram'],
+      upload: ['scheduler', 'lock', 'preflight', 'ingest', 'db', 'select', 'download', 'ffprobe', 'render', 'overlay', 'title', 'upload', 'providers', 'youtube', 'archive', 'telegram'],
+      buffer: ['manual_gen', 'select', 'download', 'render', 'manual_folder', 'buffer_upload', 'title', 'upload', 'providers', 'youtube', 'archive'],
+      render: ['download', 'ffprobe', 'audio_pool', 'render', 'overlay'],
+      providers: ['title', 'upload', 'providers', 'cache', 'youtube', 'failure'],
+      comments: ['youtube', 'comment_schedule', 'comment_worker', 'db'],
+      status: ['ingest', 'db', 'select', 'render', 'manual_folder', 'manual_done', 'archive', 'failure', 'lifecycle']
+    };
+
+    const routeEdgesByMode = {
+      overview: [
+        ['scheduler', 'lock'], ['lock', 'preflight'], ['preflight', 'ingest'],
+        ['ingest', 'db'], ['db', 'select'], ['select', 'download'],
+        ['download', 'render'], ['render', 'overlay'], ['overlay', 'title'],
+        ['title', 'upload'], ['upload', 'providers'], ['providers', 'youtube'],
+        ['youtube', 'archive'], ['archive', 'telegram']
+      ],
+      upload: [
+        ['scheduler', 'lock'], ['lock', 'preflight'], ['preflight', 'ingest'],
+        ['ingest', 'db'], ['db', 'select'], ['select', 'download'],
+        ['download', 'render'], ['ffprobe', 'render'], ['render', 'overlay'],
+        ['overlay', 'title'], ['title', 'upload'], ['upload', 'providers'],
+        ['providers', 'youtube'], ['youtube', 'archive'], ['archive', 'telegram']
+      ],
+      buffer: [
+        ['manual_gen', 'select'], ['select', 'download'], ['download', 'render'],
+        ['render', 'manual_folder'], ['manual_folder', 'buffer_upload'],
+        ['buffer_upload', 'title'], ['title', 'upload'], ['upload', 'providers'],
+        ['providers', 'youtube'], ['youtube', 'archive'], ['manual_folder', 'manual_done'],
+        ['manual_done', 'archive']
+      ],
+      render: [
+        ['download', 'render'], ['ffprobe', 'render'], ['audio_pool', 'render'],
+        ['render', 'overlay']
+      ],
+      providers: [
+        ['title', 'upload'], ['upload', 'providers'], ['providers', 'cache'],
+        ['cache', 'youtube'], ['providers', 'youtube'], ['upload', 'failure']
+      ],
+      comments: [
+        ['youtube', 'comment_schedule'], ['comment_schedule', 'comment_worker'],
+        ['comment_worker', 'youtube'], ['comment_worker', 'db']
+      ],
+      status: [
+        ['ingest', 'db'], ['db', 'select'], ['select', 'render'],
+        ['render', 'manual_folder'], ['manual_folder', 'manual_done'],
+        ['manual_done', 'archive'], ['archive', 'lifecycle'], ['render', 'failure'],
+        ['failure', 'lifecycle']
+      ]
+    };
+
+    const commandsByMode = {
+      overview: ['python scheduler.py', 'python run_now.py --status'],
+      upload: ['python run_now.py', 'python run_now.py --retry-failed-upload'],
+      buffer: ['python run_now.py --generate-buffer', 'python run_now.py --generate-buffer 2'],
+      render: ['python run_now.py --process-only', 'python run_now.py --requeue-processed'],
+      providers: ['python run_now.py --check-upload', 'python run_now.py --connect-youtube'],
+      comments: ['python run_now.py --check-auto-comment', 'python run_now.py --process-auto-comments'],
+      status: ['python run_now.py --status', 'python run_now.py --requeue-missing-output']
+    };
+
+    const modules = [
+      { title: 'Scheduler Rail', icon: 'clock', color: colors.upload, fill: 72, body: 'Six upload cron slots in IST plus optional manual-buffer and polling jobs.', source: 'scheduler.py' },
+      { title: 'Manual Console', icon: 'terminal', color: colors.status, fill: 62, body: 'CLI entry points for inspecting, rendering, uploading, retrying, and setup checks.', source: 'run_now.py' },
+      { title: 'Queue Memory', icon: 'db', color: colors.overview, fill: 84, body: 'SQLite holds lifecycle, timings, audio metadata, titles, YouTube URLs, and comment lanes.', source: 'jobs.db' },
+      { title: 'Drive Sync', icon: 'drive', color: colors.providers, fill: 69, body: 'Rclone mirrors input, audio, output, buffer, processed, and upload-cache folders.', source: 'RCLONE_*' },
+      { title: 'Render Engine', icon: 'wand', color: colors.render, fill: 78, body: 'FFmpeg creates Shorts with crop/passthrough logic, audio mix, overlays, and color grade.', source: 'process_clip' },
+      { title: 'Manual Buffer', icon: 'archive', color: colors.buffer, fill: 58, body: 'Extra renders wait in Drive for either human upload or next automated slot consumption.', source: 'generate_manual_buffer' },
+      { title: 'Upload Router', icon: 'upload', color: colors.providers, fill: 74, body: 'Composio, YouTube API, Google OAuth, Pipedream, and proxy fallback converge on YouTube IDs.', source: 'upload_to_youtube' },
+      { title: 'Comment Lanes', icon: 'comment', color: colors.comments, fill: 54, body: 'One or two delayed second-account lanes claim due jobs and post non-recent text.', source: 'process_due_auto_comments' }
+    ];
+
+    const requestedMode = new URLSearchParams(window.location.search).get('mode');
+    let activeMode = modes.some((mode) => mode.id === requestedMode) ? requestedMode : 'overview';
+    let selectedId = (routeSequences[activeMode] || routeSequences.overview).includes('render')
+      ? 'render'
+      : (routeSequences[activeMode] || routeSequences.overview)[0];
+    let searchValue = '';
+
+    function nodeById(id) {
+      return nodes.find((node) => node.id === id);
+    }
+
+    function renderIcon(name) {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.route}</svg>`;
+    }
+
+    function renderMetrics() {
+      const grid = document.getElementById('metricGrid');
+      grid.innerHTML = metrics.map((metric) => `
+        <div class="metric" style="--metric-color:${metric.color}">
+          <strong data-count="${metric.value}">0</strong>
+          <span>${metric.label}</span>
+        </div>
+      `).join('');
+
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.querySelectorAll('[data-count]').forEach((el) => {
+        const target = Number(el.dataset.count);
+        if (reduce) {
+          el.textContent = target;
+          return;
+        }
+        const started = performance.now();
+        const duration = 620;
+        function tick(now) {
+          const progress = Math.min(1, (now - started) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(target * eased);
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+
+    function renderModes() {
+      const list = document.getElementById('modeList');
+      list.innerHTML = modes.map((mode) => {
+        const count = nodes.filter((node) => node.modes.includes(mode.id)).length;
+        return `
+          <button class="mode-button" type="button" data-mode="${mode.id}" aria-pressed="${mode.id === activeMode}" style="--mode-color:${mode.color}">
+            <span class="mode-icon">${renderIcon(mode.icon)}</span>
+            <span class="mode-copy"><strong>${mode.label}</strong><span>${mode.note}</span></span>
+            <span class="mode-count">${count}</span>
+          </button>
+        `;
+      }).join('');
+
+      list.querySelectorAll('[data-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          activeMode = button.dataset.mode;
+          const first = routeSequences[activeMode][0];
+          selectedId = nodes.some((node) => node.id === selectedId && node.modes.includes(activeMode)) ? selectedId : first;
+          renderAll(false);
+        });
+      });
+    }
+
+    function renderSequence() {
+      const seq = document.getElementById('sequence');
+      const route = routeSequences[activeMode] || routeSequences.overview;
+      seq.innerHTML = route.map((id, index) => {
+        const node = nodeById(id);
+        return `
+          <button class="sequence-step ${selectedId === id ? 'active' : ''}" type="button" data-seq="${id}">
+            <span>${String(index + 1).padStart(2, '0')}</span>
+            <strong>${node.label}</strong>
+          </button>
+        `;
+      }).join('');
+      seq.querySelectorAll('[data-seq]').forEach((button) => {
+        button.addEventListener('click', () => {
+          selectedId = button.dataset.seq;
+          renderAll(false);
+        });
+      });
+
+      const strip = document.getElementById('commandStrip');
+      strip.innerHTML = (commandsByMode[activeMode] || []).map((cmd) => `<span class="cmd-chip">${cmd}</span>`).join('');
+    }
+
+    function routePairs() {
+      const routeEdges = routeEdgesByMode[activeMode] || routeEdgesByMode.overview;
+      return routeEdges.map(([from, to]) => ({
+        from,
+        to,
+        route: true
+      }));
+    }
+
+    function visibleMapSets() {
+      const routeIds = new Set(routeSequences[activeMode] || routeSequences.overview);
+      const supportIds = new Set(routeIds);
+      edges.forEach((edge) => {
+        if (edge.modes.includes(activeMode) || edge.from === selectedId || edge.to === selectedId) {
+          supportIds.add(edge.from);
+          supportIds.add(edge.to);
+        }
+      });
+      supportIds.add(selectedId);
+      return { routeIds, supportIds };
+    }
+
+    function edgeKey(edge) {
+      return `${edge.from}->${edge.to}`;
+    }
+
+    function nodeMatchesSearch(node) {
+      return !searchValue || [
+        node.label,
+        node.short,
+        node.detail,
+        node.code,
+        node.lane,
+        ...(node.inputs || []),
+        ...(node.outputs || [])
+      ].join(' ').toLowerCase().includes(searchValue);
+    }
+
+    function clearFlowSvg() {
+      const svg = document.getElementById('flowSvg');
+      svg.querySelectorAll('.flow-link, .flow-port').forEach((item) => item.remove());
+      return svg;
+    }
+
+    function nodeBox(canvas, id) {
+      const element = canvas.querySelector(`[data-node="${id}"]`);
+      if (!element || element.classList.contains('search-hide')) {
+        return null;
+      }
+
+      const canvasRect = canvas.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      return {
+        x: rect.left - canvasRect.left,
+        y: rect.top - canvasRect.top,
+        width: rect.width,
+        height: rect.height,
+        cx: rect.left - canvasRect.left + rect.width / 2,
+        cy: rect.top - canvasRect.top + rect.height / 2
+      };
+    }
+
+    function edgeAnchor(from, to) {
+      const dx = to.cx - from.cx;
+      const dy = to.cy - from.cy;
+      if (dx === 0 && dy === 0) {
+        return { x: from.cx, y: from.cy };
+      }
+
+      const halfWidth = from.width / 2 + 2;
+      const halfHeight = from.height / 2 + 2;
+      const scaleX = dx === 0 ? Number.POSITIVE_INFINITY : halfWidth / Math.abs(dx);
+      const scaleY = dy === 0 ? Number.POSITIVE_INFINITY : halfHeight / Math.abs(dy);
+      const scale = Math.min(scaleX, scaleY);
+      return {
+        x: from.cx + dx * scale,
+        y: from.cy + dy * scale
+      };
+    }
+
+    function connectorPath(start, end) {
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const horizontal = Math.abs(dx) >= Math.abs(dy);
+      const signX = dx >= 0 ? 1 : -1;
+      const signY = dy >= 0 ? 1 : -1;
+      const spread = Math.min(160, Math.max(44, (horizontal ? Math.abs(dx) : Math.abs(dy)) * 0.42));
+
+      if (horizontal) {
+        return `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} C ${(start.x + signX * spread).toFixed(1)} ${start.y.toFixed(1)}, ${(end.x - signX * spread).toFixed(1)} ${end.y.toFixed(1)}, ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+      }
+
+      return `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} C ${start.x.toFixed(1)} ${(start.y + signY * spread).toFixed(1)}, ${end.x.toFixed(1)} ${(end.y - signY * spread).toFixed(1)}, ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+    }
+
+    function drawConnection(svg, canvas, edge, kind, selected, color) {
+      const fromBox = nodeBox(canvas, edge.from);
+      const toBox = nodeBox(canvas, edge.to);
+      if (!fromBox || !toBox) return;
+
+      const start = edgeAnchor(fromBox, toBox);
+      const end = edgeAnchor(toBox, fromBox);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', connectorPath(start, end));
+      path.setAttribute('marker-end', 'url(#arrow)');
+      path.dataset.edge = edgeKey(edge);
+      path.style.setProperty('--link-color', color);
+      path.classList.add('flow-link', kind);
+      if (selected) {
+        path.classList.add('selected');
+      }
+      svg.appendChild(path);
+
+      if (kind === 'route' || selected) {
+        [start, end].forEach((point) => {
+          const port = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          port.setAttribute('cx', point.x.toFixed(1));
+          port.setAttribute('cy', point.y.toFixed(1));
+          port.setAttribute('r', selected ? '4.2' : '3.3');
+          port.style.setProperty('--link-color', selected ? colors.upload : color);
+          port.classList.add('flow-port');
+          svg.appendChild(port);
+        });
+      }
+    }
+
+    function drawFlowLinks() {
+      const canvas = document.getElementById('mapCanvas');
+      const svg = clearFlowSvg();
+      const canvasWidth = Math.max(canvas.scrollWidth, Math.ceil(canvas.getBoundingClientRect().width));
+      const canvasHeight = Math.max(canvas.scrollHeight, Math.ceil(canvas.getBoundingClientRect().height));
+      svg.setAttribute('viewBox', `0 0 ${canvasWidth} ${canvasHeight}`);
+      svg.setAttribute('width', canvasWidth);
+      svg.setAttribute('height', canvasHeight);
+
+      const modeColor = colors[activeMode] || colors.overview;
+      const routeEdgeList = routePairs();
+      const routeEdgeKeys = new Set(routeEdgeList.map(edgeKey));
+
+      const selectedSupportKeys = new Set();
+      [...edges, ...routeEdgeList].forEach((edge) => {
+        if (edge.from === selectedId || edge.to === selectedId) {
+          selectedSupportKeys.add(edgeKey(edge));
+        }
+      });
+
+      edges
+        .filter((edge) => edge.modes.includes(activeMode))
+        .filter((edge) => !routeEdgeKeys.has(edgeKey(edge)))
+        .forEach((edge) => {
+          drawConnection(svg, canvas, edge, 'support', selectedSupportKeys.has(edgeKey(edge)), modeColor);
+        });
+
+      routeEdgeList.forEach((edge) => {
+        drawConnection(svg, canvas, edge, 'route', selectedSupportKeys.has(edgeKey(edge)), modeColor);
+      });
+    }
+
+    function renderMap() {
+      const canvas = document.getElementById('mapCanvas');
+      canvas.querySelectorAll('.node').forEach((node) => node.remove());
+      clearFlowSvg();
+
+      const modeColor = colors[activeMode] || colors.overview;
+      const { routeIds, supportIds } = visibleMapSets();
+
+      nodes.forEach((node) => {
+        const matchesSearch = nodeMatchesSearch(node);
+        const isRoute = routeIds.has(node.id);
+        const isSupport = supportIds.has(node.id) || node.modes.includes(activeMode);
+        const isSelected = selectedId === node.id;
+        const offMode = activeMode !== 'overview' && !isSupport && !isSelected;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = [
+          'node',
+          isSelected ? 'active' : '',
+          isRoute ? 'route-node' : '',
+          !isRoute && isSupport ? 'support-node' : '',
+          !isRoute && !isSupport ? 'dim' : '',
+          offMode ? 'off-mode' : '',
+          matchesSearch ? '' : 'search-hide'
+        ].filter(Boolean).join(' ');
+        button.style.left = `${node.x}%`;
+        button.style.top = `${node.y}%`;
+        button.style.setProperty('--node-color', isRoute || node.modes.includes(activeMode) ? modeColor : '#758078');
+        button.dataset.node = node.id;
+        button.setAttribute('aria-label', `${node.label}: ${node.short}`);
+        button.innerHTML = `
+          <span class="node-glyph">${renderIcon(node.icon)}</span>
+          <span class="node-text"><strong>${node.label}</strong><span>${node.short}</span></span>
+          <span class="node-badge">${node.code}</span>
+        `;
+        button.addEventListener('click', () => {
+          selectedId = node.id;
+          renderAll(false);
+        });
+        canvas.appendChild(button);
+      });
+
+      requestAnimationFrame(drawFlowLinks);
+    }
+
+    function renderInspector() {
+      const node = nodeById(selectedId) || nodeById('render');
+      const inspector = document.getElementById('inspector');
+      const modeColor = colors[activeMode] || colors.overview;
+      inspector.innerHTML = `
+        <div class="inspector-head">
+          <div class="inspector-icon" style="color:${modeColor}">${renderIcon(node.icon)}</div>
+          <div>
+            <h2>${node.label}</h2>
+            <p class="kicker">${node.short} / ${node.code}</p>
+          </div>
+        </div>
+        <p>${node.detail}</p>
+        <div class="detail-grid">
+          <div class="detail-row">
+            <strong>Inputs</strong>
+            <span>${node.inputs.join(' / ')}</span>
+          </div>
+          <div class="detail-row">
+            <strong>Outputs</strong>
+            <span>${node.outputs.join(' / ')}</span>
+          </div>
+          <div class="detail-row">
+            <strong>Watch Point</strong>
+            <span>${node.watch}</span>
+          </div>
+          <div class="detail-row">
+            <strong>Modes</strong>
+            <div class="tag-row">${node.modes.map((mode) => `<span class="tag">${mode}</span>`).join('')}</div>
+          </div>
+        </div>
+        <div class="inspector-actions">
+          <button class="icon-button" type="button" data-action="focus" data-tooltip="Focus this route">${renderIcon('focus')}</button>
+          <button class="icon-button" type="button" data-action="copy" data-tooltip="Copy code reference">${renderIcon('copy')}</button>
+          <button class="icon-button" type="button" data-action="search" data-tooltip="Search this component">${renderIcon('search')}</button>
+        </div>
+      `;
+
+      inspector.querySelector('[data-action="focus"]').addEventListener('click', () => {
+        const owningMode = node.modes.find((mode) => mode !== 'overview') || 'overview';
+        activeMode = owningMode;
+        renderAll(false);
+      });
+      inspector.querySelector('[data-action="copy"]').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(node.code);
+        } catch (_err) {
+          const search = document.getElementById('nodeSearch');
+          search.value = node.code;
+          search.dispatchEvent(new Event('input'));
+        }
+      });
+      inspector.querySelector('[data-action="search"]').addEventListener('click', () => {
+        const search = document.getElementById('nodeSearch');
+        search.value = node.label;
+        search.focus();
+        search.dispatchEvent(new Event('input'));
+      });
+    }
+
+    function renderModules() {
+      const grid = document.getElementById('moduleGrid');
+      grid.innerHTML = modules.map((module) => `
+        <article class="module-card" style="--module-color:${module.color}">
+          <div class="module-head">
+            <span class="tiny-icon">${renderIcon(module.icon)}</span>
+            <h3>${module.title}</h3>
+          </div>
+          <p>${module.body}</p>
+          <div class="mini-meter" aria-hidden="true"><span style="--fill:${module.fill}%"></span></div>
+          <span class="cmd-chip">${module.source}</span>
+        </article>
+      `).join('');
+    }
+
+    function renderAll(includeStatics = true) {
+      if (includeStatics) {
+        renderMetrics();
+        renderModules();
+      }
+      renderModes();
+      renderSequence();
+      renderMap();
+      renderInspector();
+    }
+
+    document.getElementById('nodeSearch').addEventListener('input', (event) => {
+      searchValue = event.target.value.trim().toLowerCase();
+      renderMap();
+    });
+
+    renderAll(true);
+
+    window.addEventListener('resize', () => {
+      requestAnimationFrame(drawFlowLinks);
+    });
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => requestAnimationFrame(drawFlowLinks));
+    }
+  </script>
+</body>
+</html>
