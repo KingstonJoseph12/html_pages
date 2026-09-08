@@ -1,269 +1,987 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fortnite Shorts Analytics Reports</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #101116;
-      --panel: #181a23;
-      --panel-strong: #202432;
-      --text: #f7f4ec;
-      --muted: #b6b2a8;
-      --line: rgba(247, 244, 236, 0.16);
-      --red: #ff4b4b;
-      --gold: #f5b84b;
-      --mint: #72dfb9;
-      --blue: #5eb7ff;
-      --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workload Placement — Diligence Memo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F5EF;
+    --paper-dim:#EFEBE1;
+    --ink:#211F1A;
+    --ink-soft:#4A463E;
+    --meta:#736C5E;
+    --rule:#D9D2C1;
+    --rule-strong:#B9AF97;
+    --accent:#9C5B27;
+    --accent-soft:#E7D9C3;
+    --high:#7A2E22;
+    --med:#8A6A1E;
+    --low:#5B6E4F;
+    --serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --mono:'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    --maxw:680px;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Layout shell ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns:236px 1fr;
+    min-height:100vh;
+  }
+
+  /* ---------- Sidebar / tab rail ---------- */
+  .rail{
+    border-right:1px solid var(--rule);
+    padding:34px 0 34px 0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .rail-head{
+    padding:0 26px 22px 26px;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:6px;
+  }
+  .rail-head .kicker{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.06em;
+    color:var(--meta);
+    margin:0 0 8px 0;
+  }
+  .rail-head h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:19px;
+    line-height:1.28;
+    margin:0 0 6px 0;
+    color:var(--ink);
+  }
+  .rail-head p{
+    font-size:13px;
+    color:var(--meta);
+    margin:0;
+    line-height:1.5;
+  }
+
+  nav.tabs{
+    display:flex;
+    flex-direction:column;
+    padding-top:8px;
+  }
+  .tab-btn{
+    all:unset;
+    cursor:pointer;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    padding:9px 26px;
+    font-family:var(--serif);
+    font-size:14.5px;
+    color:var(--ink-soft);
+    border-left:3px solid transparent;
+    line-height:1.35;
+  }
+  .tab-btn .n{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--meta);
+    min-width:16px;
+    flex-shrink:0;
+  }
+  .tab-btn:hover{ background:var(--paper-dim); color:var(--ink); }
+  .tab-btn.active{
+    color:var(--ink);
+    font-weight:600;
+    border-left-color:var(--accent);
+    background:var(--paper-dim);
+  }
+  .tab-btn.active .n{ color:var(--accent); }
+
+  .rail-foot{
+    padding:20px 26px 0 26px;
+    margin-top:14px;
+    border-top:1px solid var(--rule);
+  }
+  .progress-label{
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--meta);
+    letter-spacing:.04em;
+    margin-bottom:6px;
+  }
+  .progress-track{
+    height:3px;
+    background:var(--rule);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--accent);
+    width:9%;
+    transition:width .25s ease;
+  }
+
+  /* ---------- Main reading column ---------- */
+  main{
+    padding:56px 40px 120px 40px;
+    max-width:calc(var(--maxw) + 80px);
+  }
+  .section{ display:none; }
+  .section.active{ display:block; animation:rise .28s ease; }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .section-marker{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent);
+    letter-spacing:.05em;
+    margin-bottom:10px;
+  }
+  .section h2{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:30px;
+    line-height:1.2;
+    margin:0 0 6px 0;
+    max-width:var(--maxw);
+  }
+  .section .dek{
+    font-size:15.5px;
+    color:var(--meta);
+    max-width:var(--maxw);
+    margin:0 0 34px 0;
+    line-height:1.55;
+    font-style:italic;
+  }
+
+  .prose{ max-width:var(--maxw); }
+  .prose p{ margin:0 0 18px 0; font-size:16.5px; }
+  .prose p:last-child{ margin-bottom:0; }
+  .prose strong{ font-weight:700; color:var(--ink); }
+  .prose em{ font-style:italic; }
+  .prose a{ color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+  .prose a:hover{ color:var(--high); }
+
+  .callout{
+    max-width:var(--maxw);
+    border-left:3px solid var(--accent);
+    background:var(--paper-dim);
+    padding:16px 20px;
+    margin:0 0 28px 0;
+    font-size:15.5px;
+    color:var(--ink-soft);
+  }
+  .callout strong{ color:var(--ink); }
+
+  h3.sub{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:20px;
+    margin:36px 0 14px 0;
+    max-width:var(--maxw);
+    color:var(--ink);
+  }
+  h3.sub:first-child{ margin-top:0; }
+
+  /* ---------- Tables ---------- */
+  .tbl-wrap{
+    max-width:100%;
+    overflow-x:auto;
+    margin:0 0 30px 0;
+    border:1px solid var(--rule);
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:560px;
+    font-size:14px;
+  }
+  table th{
+    text-align:left;
+    font-family:var(--mono);
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:.03em;
+    color:var(--meta);
+    background:var(--paper-dim);
+    padding:10px 14px;
+    border-bottom:1px solid var(--rule-strong);
+    white-space:nowrap;
+  }
+  table td{
+    padding:12px 14px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+  table tr:last-child td{ border-bottom:none; }
+  table td:first-child{ color:var(--ink); font-weight:500; }
+  td.num{ font-family:var(--mono); font-size:13px; text-align:center; }
+
+  .flag{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:11px;
+    padding:2px 7px;
+    border-radius:2px;
+    letter-spacing:.02em;
+  }
+  .flag.high{ background:#F3E3DF; color:var(--high); }
+  .flag.medium{ background:#F1E7D0; color:var(--med); }
+  .flag.mediumhigh{ background:#F1E7D0; color:var(--med); }
+  .flag.low{ background:#E4EADF; color:var(--low); }
+
+  /* ---------- Lists ---------- */
+  .prose ul, .prose ol{ max-width:var(--maxw); margin:0 0 22px 0; padding-left:22px; }
+  .prose li{ margin-bottom:9px; font-size:16.5px; }
+  .prose ul li::marker{ color:var(--accent); }
+  ul.tight li{ margin-bottom:6px; }
+
+  .cut-list li{
+    list-style:none;
+    padding:10px 0 10px 0;
+    border-bottom:1px dotted var(--rule);
+    margin-bottom:0 !important;
+  }
+  .cut-list{ padding-left:0 !important; }
+  .cut-list li:last-child{ border-bottom:none; }
+
+  /* ---------- Mermaid / diagram block ---------- */
+  .diagram-box{
+    max-width:var(--maxw);
+    border:1px solid var(--rule);
+    background:#FFFFFF;
+    padding:20px;
+    margin:0 0 28px 0;
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.9;
+    color:var(--ink-soft);
+    overflow-x:auto;
+    white-space:pre;
+  }
+
+  /* ---------- Confidence pill row for insights ---------- */
+  .insight-row{
+    max-width:var(--maxw);
+    padding:20px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .insight-row:first-of-type{ padding-top:0; }
+  .insight-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  .insight-num{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--accent);
+    font-weight:600;
+  }
+  .insight-title{
+    font-weight:600;
+    font-size:16.5px;
+    color:var(--ink);
+    flex:1;
+    min-width:180px;
+  }
+  .insight-body p{ font-size:15.5px; margin:6px 0 6px 0; color:var(--ink-soft); }
+  .insight-body .why{ color:var(--ink-soft); }
+  .insight-body .invalid{
+    font-size:13.5px;
+    color:var(--meta);
+    margin-top:8px;
+    padding-left:14px;
+    border-left:2px solid var(--rule-strong);
+  }
+
+  /* ---------- Nav footer (prev/next) ---------- */
+  .pagenav{
+    max-width:var(--maxw);
+    display:flex;
+    justify-content:space-between;
+    margin-top:52px;
+    padding-top:22px;
+    border-top:1px solid var(--rule);
+    font-family:var(--mono);
+    font-size:12.5px;
+  }
+  .pagenav button{
+    all:unset;
+    cursor:pointer;
+    color:var(--ink-soft);
+    padding:8px 0;
+  }
+  .pagenav button:hover{ color:var(--accent); }
+  .pagenav button:disabled{ opacity:.3; cursor:default; }
+  .pagenav .lbl{ display:block; font-family:var(--serif); font-size:14.5px; color:var(--ink); margin-top:2px; }
+
+  /* ---------- Mobile top tab strip ---------- */
+  .mobile-tabs{ display:none; }
+
+  @media (max-width: 860px){
+    .shell{ grid-template-columns:1fr; }
+    .rail{
+      position:sticky;
+      top:0;
+      height:auto;
+      max-height:none;
+      width:100%;
+      border-right:none;
+      border-bottom:1px solid var(--rule);
+      padding:0;
+      z-index:20;
+      background:var(--paper);
     }
-
-    * {
-      box-sizing: border-box;
+    .rail-head{ padding:18px 20px 14px 20px; }
+    .rail-head h1{ font-size:16.5px; }
+    nav.tabs{
+      flex-direction:row;
+      overflow-x:auto;
+      padding:0 12px 12px 12px;
+      gap:2px;
+      -webkit-overflow-scrolling:touch;
     }
-
-    html {
-      min-height: 100%;
-      background: var(--bg);
+    .tab-btn{
+      flex-shrink:0;
+      border-left:none;
+      border-bottom:3px solid transparent;
+      padding:8px 12px;
+      font-size:13px;
+      white-space:nowrap;
     }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text);
-      background:
-        linear-gradient(135deg, rgba(255, 75, 75, 0.18), transparent 36%),
-        linear-gradient(225deg, rgba(94, 183, 255, 0.14), transparent 34%),
-        var(--bg);
-    }
-
-    main {
-      width: min(1120px, calc(100% - 32px));
-      min-height: 100vh;
-      margin: 0 auto;
-      padding: 56px 0;
-      display: grid;
-      align-content: center;
-      gap: 34px;
-    }
-
-    .masthead {
-      display: grid;
-      gap: 16px;
-      max-width: 780px;
-    }
-
-    .eyebrow {
-      width: fit-content;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 8px 12px;
-      color: var(--mint);
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: rgba(16, 17, 22, 0.58);
-    }
-
-    h1 {
-      margin: 0;
-      max-width: 12ch;
-      font-size: clamp(3rem, 9vw, 7.5rem);
-      line-height: 0.9;
-      letter-spacing: 0;
-      text-transform: uppercase;
-    }
-
-    .summary {
-      max-width: 620px;
-      margin: 0;
-      color: var(--muted);
-      font-size: clamp(1rem, 2vw, 1.18rem);
-      line-height: 1.55;
-    }
-
-    .reports {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .report {
-      min-height: 260px;
-      display: grid;
-      align-content: space-between;
-      gap: 32px;
-      padding: 24px;
-      color: inherit;
-      text-decoration: none;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background:
-        linear-gradient(160deg, rgba(255, 255, 255, 0.08), transparent 48%),
-        var(--panel);
-      box-shadow: var(--shadow);
-      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
-    }
-
-    .report:focus-visible,
-    .report:hover {
-      transform: translateY(-3px);
-      border-color: rgba(247, 244, 236, 0.36);
-      background:
-        linear-gradient(160deg, rgba(255, 255, 255, 0.12), transparent 48%),
-        var(--panel-strong);
-      outline: none;
-    }
-
-    .report-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      min-height: 34px;
-      border-radius: 999px;
-      padding: 7px 11px;
-      color: #121317;
-      font-size: 0.75rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      background: var(--gold);
-    }
-
-    .arrow {
-      width: 42px;
-      height: 42px;
-      display: inline-grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      border-radius: 50%;
-      color: var(--text);
-      font-size: 1.45rem;
-      line-height: 1;
-    }
-
-    .report h2 {
-      margin: 0;
-      font-size: clamp(1.8rem, 4vw, 3rem);
-      line-height: 0.95;
-      letter-spacing: 0;
-      text-transform: uppercase;
-    }
-
-    .report p {
-      margin: 14px 0 0;
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.45;
-    }
-
-    .report-foot {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding-top: 18px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .report:nth-child(1) .badge {
-      background: var(--red);
-      color: #fff7f7;
-    }
-
-    .report:nth-child(2) .badge {
-      background: var(--blue);
-      color: #08131d;
-    }
-
-    .report:nth-child(3) .badge {
-      background: var(--mint);
-      color: #08131d;
-    }
-
-    @media (max-width: 760px) {
-      main {
-        width: min(100% - 24px, 640px);
-        padding: 34px 0;
-        align-content: start;
-      }
-
-      .reports {
-        grid-template-columns: 1fr;
-      }
-
-      .report {
-        min-height: 230px;
-        padding: 20px;
-      }
-    }
-  </style>
+    .tab-btn.active{ border-bottom-color:var(--accent); border-left-color:transparent; }
+    .rail-foot{ display:none; }
+    main{ padding:30px 20px 90px 20px; }
+    .section h2{ font-size:24px; }
+    table{ min-width:520px; }
+  }
+</style>
 </head>
 <body>
-  <main>
-    <section class="masthead" aria-labelledby="page-title">
-      <div class="eyebrow">YouTube Shorts</div>
-      <h1 id="page-title">Analytics Reports</h1>
-      <p class="summary">Fortnite Shorts performance analysis, automation impact, retention patterns, audio spread, outliers, and recommended next moves.</p>
+
+<div class="shell">
+
+  <aside class="rail">
+    <div class="rail-head">
+      <p class="kicker">DILIGENCE MEMO · WORKLOAD PLACEMENT</p>
+      <h1>Snowflake Offload Thesis: A Read</h1>
+      <p>11 sections. Read in order, or jump to any tab.</p>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="rail-foot">
+      <div class="progress-label" id="progress-label">SECTION 1 OF 11</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <!-- Sections injected by JS from data below, but written as static HTML per section for full control -->
+
+    <section class="section" data-idx="0" id="sec-0">
+      <div class="section-marker">OPENING ASSESSMENT</div>
+      <h2>The Verdict, Up Front</h2>
+      <p class="dek">A credible problem — not yet a venture-scale business.</p>
+      <div class="prose">
+        <p>I read the entire document — all 2,533 lines — and checked the material technical and competitive claims against current primary sources.</p>
+        <div class="callout"><strong>My conclusion:</strong> the document identifies a credible problem, but it does not establish a venture-scale business. Its biggest unsupported leap is from "customers may buy a useful assessment" to "customers will continuously use a workload control platform." The final recommendation becomes more confident after the founder expresses a preference for building a platform, without introducing new customer evidence.</div>
+        <p>The strongest opportunity is to prove and govern economically worthwhile changes to data workloads. Whether that supports a durable platform depends on the frequency of those changes, customers' willingness to implement them, and savings that actually reach their budgets.</p>
+        <p><em>All proposed prices, savings examples, and validation thresholds in this memo are hypotheses or illustrations — not observed customer results.</em></p>
+      </div>
     </section>
 
-    <section class="reports" aria-label="Reports">
-      <a class="report" href="yt_analytics_report.html">
-        <div class="report-top">
-          <span class="badge">Full Analysis</span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
-        </div>
-        <div>
-          <h2>The View Drop That Wasn't</h2>
-          <p>Channel-level diagnosis across upload timing, automation, CTR, retention, and subscriber conversion.</p>
-        </div>
-        <div class="report-foot">
-          <span>yt_analytics_report.html</span>
-          <span>Open</span>
-        </div>
-      </a>
+    <section class="section" data-idx="1" id="sec-1">
+      <div class="section-marker">SECTION 1</div>
+      <h2>The 10 Most Important Insights</h2>
+      <p class="dek">Ranked by what breaks the thesis if wrong.</p>
+      <div class="prose">
 
-      <a class="report" href="shorts_analytics_dashboard.html">
-        <div class="report-top">
-          <span class="badge">Dashboard</span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">01</span><span class="insight-title">Attributed spend is not removable spend.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">A workload assigned $300K of warehouse cost may release little cash when removed. Rank opportunities by the resulting change in billed capacity and contractual obligations — otherwise the product manufactures savings that finance cannot capture.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> repeated removal experiments showing attributed cost closely predicts invoice reductions across a narrowly selected customer segment.</p>
+          </div>
         </div>
-        <div>
-          <h2>The Shorts Autopsy</h2>
-          <p>Focused dashboard view for regime shifts, hypotheses, audio performance, outliers, and recommendations.</p>
-        </div>
-        <div class="report-foot">
-          <span>shorts_analytics_dashboard.html</span>
-          <span>Open</span>
-        </div>
-      </a>
 
-      <a class="report" href="pipeline_cockpit.html">
-        <div class="report-top">
-          <span class="badge">Cockpit</span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">02</span><span class="insight-title">The useful unit of migration is a bounded pipeline — with dependencies, owner, and service requirements attached.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">An expensive query is not necessarily independently movable. Moving it may require copying inputs, maintaining freshness, and returning outputs to Snowflake. Those boundaries determine the economics.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> most valuable candidates proving independently executable with negligible input/output and governance dependencies.</p>
+          </div>
         </div>
-        <div>
-          <h2>Pipeline Cockpit</h2>
-          <p>Interactive pipeline visualization with node mapping, module matrix, sequence tracing, and inspector panel.</p>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">03</span><span class="insight-title">The benchmark to beat is a reasonably optimized Snowflake implementation.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Deleting unnecessary work, changing schedules, improving SQL, resizing warehouses, and negotiating contracts may outperform relocation with less effort. Migration savings must be incremental to feasible alternatives.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> customers consistently demonstrating large additional savings from offloading after bounded native optimization.</p>
+          </div>
         </div>
-        <div class="report-foot">
-          <span>pipeline_cockpit.html</span>
-          <span>Open</span>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">04</span><span class="insight-title">Iceberg reduces one form of lock-in; it does not create workload portability by itself.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Storage compatibility helps, but SQL semantics, policies, catalogs, orchestration, writes, and downstream dependencies remain. Sell a proven workload outcome, not an open-format conversion.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> a representative production estate moving across engines with negligible changes beyond configuring shared storage.</p>
+          </div>
         </div>
-      </a>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">05</span><span class="insight-title">Recurrence must come from an actual operational workflow.</span><span class="flag medium">MEDIUM CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Price changes and occasional renewals do not automatically create subscription demand. New pipeline launches, material code changes, and regression investigations offer a more credible recurring workflow.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> customers repeatedly buying continuous placement monitoring and acting on it without integrating the product into development or operational change processes.</p>
+          </div>
+        </div>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">06</span><span class="insight-title">Target readiness matters more than raw Snowflake spend.</span><span class="flag medium">MEDIUM CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">A $2M customer already operating AWS analytics may be much easier to serve than a $10M customer requiring a new operating model. Qualify for an approved destination, an accountable owner, and a practical budget reduction.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> customers without an existing target platform adopting and operating one quickly enough that onboarding and support remain economical.</p>
+          </div>
+        </div>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">07</span><span class="insight-title">Benchmarking is the product's evidence mechanism — not a feature to add later.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Metadata can identify candidates; it cannot establish target performance and TCO. A narrow benchmark must arrive before a broad dashboard.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> predictions from metadata alone achieving sufficiently reliable out-of-customer accuracy that buyers confidently implement recommendations without benchmark evidence.</p>
+          </div>
+        </div>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">08</span><span class="insight-title">Neutrality is a credibility advantage, not a moat.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Established FinOps vendors can compare alternatives too, and they have distribution and access. The real advantage must be faster, more reliable decisions and execution for a specific workload class.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> buyers systematically rejecting vendor-affiliated alternatives and paying a durable premium for independence alone.</p>
+          </div>
+        </div>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">09</span><span class="insight-title">A paid assessment validates diagnosis demand; an implemented change validates the underlying company thesis.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Customers may buy reports for negotiations, internal politics, or architecture reviews. Require evidence of engineering allocation and implementation intent before believing the deeper thesis.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> assessments alone generating sufficient repeat purchases, retention, margins, and acquisition efficiency to sustain the intended business.</p>
+          </div>
+        </div>
+
+        <div class="insight-row">
+          <div class="insight-head"><span class="insight-num">10</span><span class="insight-title">Snowflake offloading is a beachhead with an unproven expansion path.</span><span class="flag high">HIGH CONFIDENCE</span></div>
+          <div class="insight-body">
+            <p class="why">Large warehouse bills are not the software TAM. Enough reachable buyers, recurring value, and repeatable delivery are needed before adding platforms can create venture scale.</p>
+            <p class="invalid"><strong>Would be invalidated by:</strong> bottom-up customer counts, paid conversion, retention, and account expansion demonstrating a sufficiently large software business inside this niche alone.</p>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top:24px;">
+          <strong>Worth dwelling on — Insight 1.</strong> Snowflake's query attribution excludes idle warehouse time and several other cost categories; it is an allocation of resource consumption, not a prediction of what disappears after an intervention. <a href="https://docs.snowflake.com/en/sql-reference/account-usage/query_attribution_history" target="_blank" rel="noopener">Snowflake query attribution documentation ↗</a>
+        </div>
+      </div>
     </section>
+
+    <section class="section" data-idx="2" id="sec-2">
+      <div class="section-marker">SECTION 2</div>
+      <h2>Facts vs. Hypotheses</h2>
+      <p class="dek">What's actually established, what's plausible, and what's speculation that shouldn't drive the product yet.</p>
+      <div class="prose">
+
+        <h3 class="sub">Reasonably established facts</h3>
+        <ul>
+          <li><strong>Substantial enterprise spend exists to investigate.</strong> Snowflake reported 828 customers generating more than $1M in trailing annual product revenue in Q2 FY2027. This establishes spending capacity — not dissatisfaction or migration demand. <a href="https://investors.snowflake.com/news/news-details/2026/Snowflake-Reports-Financial-Results-for-the-Second-Quarter-of-Fiscal-2027/default.aspx" target="_blank" rel="noopener">Snowflake results ↗</a></li>
+          <li><strong>Useful discovery telemetry exists.</strong> Query history, warehouse metering, and access history support substantial automated analysis. Access history requires Enterprise Edition or higher; available metadata and permissions vary. <a href="https://docs.snowflake.com/en/sql-reference/account-usage/query_history" target="_blank" rel="noopener">Query history ↗</a>, <a href="https://docs.snowflake.com/en/sql-reference/account-usage/access_history" target="_blank" rel="noopener">Access history ↗</a></li>
+          <li><strong>Existing Snowflake tables do not become Iceberg tables merely by changing the default table format.</strong> <a href="https://docs.snowflake.com/en/user-guide/tables-iceberg-default-metadata-format" target="_blank" rel="noopener">Snowflake format configuration ↗</a></li>
+          <li><strong>Open table access does not automatically preserve fine-grained policies.</strong> Snowflake documents restrictions on direct external-engine access to tables protected by masking or row-access policies. <a href="https://docs.snowflake.com/en/user-guide/externally-managed-iceberg-tables-access-horizon-irc" target="_blank" rel="noopener">Horizon access documentation ↗</a></li>
+          <li><strong>Cost visibility and automated optimization already have competitors.</strong> SELECT advertises both. The competitive landscape is also partly double-counted in the source document: DoiT acquired SELECT and folded its technology into PerfectScale. <a href="https://select.dev/" target="_blank" rel="noopener">SELECT ↗</a>, <a href="https://www.doit.com/blog/doit-acquires-select-to-eliminate-snowflake-waste" target="_blank" rel="noopener">DoiT acquisition announcement ↗</a></li>
+          <li><strong>Migration components already exist.</strong> Lakebridge provides assessment, conversion, and reconciliation capabilities; SQLGlot provides parsing and transpilation. Their existence doesn't establish complete migration correctness. <a href="https://github.com/databrickslabs/lakebridge/blob/main/labs.yml" target="_blank" rel="noopener">Lakebridge commands ↗</a>, <a href="https://sqlglot.com/sqlglot.html" target="_blank" rel="noopener">SQLGlot documentation ↗</a></li>
+          <li><strong>Athena/Iceberg is a concrete target with constraints.</strong> Engine compatibility, catalog integration, supported operations, and timestamp precision need checking. S3 and catalog costs remain additional to query execution. <a href="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg.html" target="_blank" rel="noopener">Athena Iceberg documentation ↗</a>, <a href="https://aws.amazon.com/athena/pricing/" target="_blank" rel="noopener">Athena pricing ↗</a></li>
+        </ul>
+
+        <h3 class="sub">Plausible but unproven assumptions</h3>
+        <ul class="tight">
+          <li>A meaningful fraction of qualified customers have large savings left after native optimization.</li>
+          <li>Those savings concentrate in a repeatable class of portable workloads.</li>
+          <li>Metadata can identify that class efficiently.</li>
+          <li>Customers will authorize benchmarks, provide engineering time, and implement successful recommendations.</li>
+          <li>The same workflow recurs frequently enough to justify a subscription.</li>
+          <li>Human effort falls substantially across customers.</li>
+          <li>Outcome data generalizes enough to improve future assessments.</li>
+          <li>Customers permit the necessary collection and reuse of derived evidence.</li>
+          <li>A narrow AWS target wins enough deals to establish a business.</li>
+        </ul>
+
+        <h3 class="sub">Speculation that should not influence the product yet</h3>
+        <ul class="tight">
+          <li>The "20% of workloads / 80% of addressable cost" distribution.</li>
+          <li>The document's precise compatibility and confidence percentages.</li>
+          <li>Its ACV ranges, willingness-to-pay scores, and venture scores.</li>
+          <li>Automatic cross-engine routing as the inevitable destination.</li>
+          <li>Enterprise-wide migration automation within a fixed timeline.</li>
+          <li>A proprietary cost model that reliably predicts every engine from query text.</li>
+          <li>The claim that no competitor owns workload-placement decisions.</li>
+          <li>"Multi-engine adoption will increase" as sufficient proof that customers want another platform.</li>
+        </ul>
+
+        <div class="callout">The document contains no actual customer dataset, paid assessment, independently measured benchmark, or subscription renewal. Its numerical examples illustrate arguments; they do not validate them.</div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="3" id="sec-3">
+      <div class="section-marker">SECTION 3</div>
+      <h2>Contradictions</h2>
+      <p class="dek">Where the source document argues against itself — and which side actually holds up.</p>
+      <div class="prose">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="min-width:200px;">Position A</th><th style="min-width:200px;">Position B</th><th style="min-width:220px;">More likely correct — and why</th><th style="min-width:200px;">What settles it</th></tr></thead>
+            <tbody>
+              <tr><td>Iceberg means companies can gain interoperability with "no migration"; the original pain mostly disappears.</td><td>Existing tables, SQL, policies, and pipelines still require changes.</td><td><strong>B.</strong> Shared storage reduces some work, but doesn't remove existing application dependencies.</td><td>Trace and port one complete production pipeline, recording every required change.</td></tr>
+              <tr><td>A unified multi-engine dashboard is the attractive adjacent business.</td><td>Visibility and native optimization are crowded.</td><td><strong>B, for an initial wedge.</strong> Existing vendors already sell these outcomes.</td><td>Competitive evaluations using actual customer requirements and existing tools.</td></tr>
+              <tr><td>Placement inherently solves recurring revenue.</td><td>Customers may need placement decisions only around renewals.</td><td><strong>B is the safer commercial assumption.</strong> Technical change frequency doesn't establish purchasing frequency.</td><td>Paid follow-on use and repeat implemented decisions over several months.</td></tr>
+              <tr><td>Begin destination-neutral with Trino, Spark, Athena, and other engines.</td><td>Benchmark one target architecture.</td><td><strong>B, operationally.</strong> Intellectual neutrality doesn't require implementing every destination.</td><td>Compare incremental deals won against engineering and support cost per added engine.</td></tr>
+              <tr><td>Automated benchmarking is a straightforward MVP capability.</td><td>A trustworthy benchmark engine requires at least 6–9 months.</td><td><strong>Neither timeline is established.</strong> One manually configured benchmark is feasible sooner; a broadly reusable product is much harder.</td><td>Time a real assessment, including security approval, data prep, tuning, and reconciliation.</td></tr>
+              <tr><td>Visibility alone is too weak.</td><td>Launch Phase 1 with visibility, anomalies, optimization suggestions, and portability scores.</td><td><strong>The earlier warning is stronger.</strong> The final roadmap postpones the evidence that differentiates the product.</td><td>Ask buyers to purchase this Phase 1 against existing tools without the benchmark.</td></tr>
+              <tr><td>Independent positioning creates strong defensibility.</td><td>Vendors and established optimizers can absorb the functionality.</td><td><strong>B on defensibility.</strong> Independence doesn't prevent reproduction or bundling.</td><td>Win paid evaluations where both products can benchmark and recommend alternatives.</td></tr>
+              <tr><td>A read-only connection is the entry point to verified savings.</td><td>Real benchmarking requires customer data and target execution.</td><td><strong>Both describe different stages; conflating them is misleading.</strong> Metadata access permits triage, not full validation.</td><td>Measure the conversion from metadata access to permission for data-bearing benchmarks.</td></tr>
+              <tr><td>The opportunity remains commercially unproven.</td><td>The founder wants a platform, so a continuous control plane becomes the recommendation.</td><td><strong>The uncertainty remains.</strong> Founder preference changes desired company shape, not customer demand.</td><td>Paid recurring use with an identified operational owner.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="4" id="sec-4">
+      <div class="section-marker">SECTION 4</div>
+      <h2>Independent Startup Thesis</h2>
+      <p class="dek">The strongest potential company, stated plainly.</p>
+      <div class="prose">
+        <div class="callout"><strong>The strongest potential company is a vendor-independent system that evaluates and governs data-pipeline changes against cost, correctness, and performance requirements, then verifies their realized economics.</strong></div>
+        <p>The important distinction is the workflow: customers use it when introducing or changing meaningful workloads. They do not need to move existing pipelines between engines every month.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Element</th><th>Proposed thesis</th></tr></thead>
+            <tbody>
+              <tr><td>Problem</td><td>Platform teams cannot cheaply establish whether a proposed optimization or offload will improve total economics without breaking outputs or service requirements. Consequently, they either avoid worthwhile changes or implement poorly substantiated ones.</td></tr>
+              <tr><td>ICP</td><td>AWS-based companies with substantial Snowflake batch processing, dbt or similarly versioned pipelines, an existing approved AWS analytics environment, and regular pipeline changes. Start by testing roughly $1M–$5M annual Snowflake spend.</td></tr>
+              <tr><td>Economic buyer</td><td>VP/Head of Data Platform with authority over infrastructure spend and engineering allocation. Finance validates the savings case.</td></tr>
+              <tr><td>Technical champion</td><td>Staff/principal data engineer or platform engineering manager who owns the candidate pipelines.</td></tr>
+              <tr><td>Trigger event</td><td>A budget reduction mandate, approaching renewal, or a major new pipeline whose expected cost challenges the budget.</td></tr>
+              <tr><td>Initial wedge</td><td>Benchmark one bounded Snowflake SQL pipeline against Athena/Iceberg and show incremental, economically realizable savings.</td></tr>
+              <tr><td>Recurring product</td><td>A repeatable evaluation and approval workflow for new pipelines, material changes, regressions, and selected offloads; it retains benchmarks and verifies outcomes after deployment.</td></tr>
+              <tr><td>Expansion path</td><td>More pipelines at the same customer → integrations with development and scheduling workflows → a second customer-requested target → another source platform.</td></tr>
+              <tr><td>Moat</td><td>Reusable workload-change evidence, validated transformation rules, prediction calibration, and integration into customers' change processes.</td></tr>
+              <tr><td>Biggest strategic threat</td><td>An established FinOps vendor offering sufficiently good cross-engine assessment within an existing contract, while warehouse vendors improve native economics.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>The venture case remains conditional.</strong> For illustration, $100M ARR requires 1,000 customers at $100K ARR or 500 at $200K. Merely listing additional supported engines does not establish either path.</p>
+      </div>
+    </section>
+
+    <section class="section" data-idx="5" id="sec-5">
+      <div class="section-marker">SECTION 5</div>
+      <h2>What Not to Build</h2>
+      <p class="dek">Cut these aggressively.</p>
+      <div class="prose">
+        <ul class="cut-list">
+          <li><strong>A generic multi-cloud cost dashboard.</strong> Useful, established, and unlikely to win your first customers on differentiation.</li>
+          <li><strong>A general Snowflake optimizer.</strong> Use existing tools and bounded expert tuning to establish the baseline.</li>
+          <li><strong>A universal SQL translation copilot.</strong> Reuse parsers and translators; own the evidence that a specific transformation works.</li>
+          <li><strong>A table-copying or schema-conversion company.</strong> Necessary plumbing with weak pricing power.</li>
+          <li><strong>A new catalog or Iceberg maintenance service.</strong> Infrastructure vendors already provide substantial functionality, including managed maintenance. <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-maintenance-overview.html" target="_blank" rel="noopener">AWS S3 Tables maintenance ↗</a></li>
+          <li><strong>A metadata-only "savings calculator" with precise dollar promises.</strong> Treat it as screening, with explicit unknowns.</li>
+          <li><strong>A universal lineage platform.</strong> Build only the dependency evidence necessary to evaluate selected workloads.</li>
+          <li><strong>A new distributed query engine or transparent SQL proxy.</strong> Introduces a much larger correctness, availability, and compatibility obligation.</li>
+          <li><strong>Automatic real-time workload routing.</strong> Migration, data placement, policies, and operational ownership all have switching costs.</li>
+          <li><strong>General CDC, dual writes, and automatic rollback.</strong> Can consume the company before demand is established.</li>
+          <li><strong>Arbitrary stored-procedure and Snowpark modernization.</strong> Accepting every exception creates an unbounded services business.</li>
+          <li><strong>Cold-data archival as the defining wedge.</strong> Infrequently accessed data may have little compute spend to remove; retained copies and access requirements may weaken storage savings.</li>
+          <li><strong>"Savings guaranteed" pricing.</strong> Baselines, commitments, demand changes, and implementation responsibility make premature guarantees dangerous.</li>
+          <li><strong>A large platform shell before a successful benchmark.</strong> Authentication, dashboards, and connector breadth do not answer the central business question.</li>
+        </ul>
+        <div class="callout">Early manual work is acceptable when it teaches a repeatable product. Repeatedly accepting unrelated enterprise exceptions is a different business.</div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="6" id="sec-6">
+      <div class="section-marker">SECTION 6</div>
+      <h2>The Wedge</h2>
+      <p class="dek">A 30-day paid offload proof for one bounded Snowflake SQL pipeline.</p>
+      <div class="prose">
+        <h3 class="sub">Target pipeline criteria</h3>
+        <ul class="tight">
+          <li>Has a named owner and meaningful recurring compute cost.</li>
+          <li>Runs on an identifiable warehouse or schedule whose consumption can actually decline.</li>
+          <li>Uses partition-bounded SQL transformations.</li>
+          <li>Has a clear batch completion deadline.</li>
+          <li>Has few external dependencies.</li>
+          <li>Can obtain inputs economically from existing S3 data or a bounded export.</li>
+          <li>Has an approved path for delivering its outputs.</li>
+        </ul>
+        <p>A pipeline that requires continuous full-table extraction from Snowflake is a poor first candidate, even if its SQL is portable. The 30-day period starts after the customer supplies the agreed access and names an engineer. Track the pre-access delay separately as part of sales economics.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="width:110px;">Period</th><th>Work and deliverable</th></tr></thead>
+            <tbody>
+              <tr><td>Days 1–5</td><td>Reconcile recent workload activity with spend, obtain contractual rates, identify feasible native improvements, and establish the customer's savings and performance criteria.</td></tr>
+              <tr><td>Days 6–10</td><td>Select up to three candidates; map boundaries, owners, policies, freshness, and dependencies. Choose one for the benchmark.</td></tr>
+              <tr><td>Days 11–20</td><td>Prepare a reproducible dataset, port the pipeline to one target, and run source-versus-target comparisons with a bounded tuning budget.</td></tr>
+              <tr><td>Days 21–30</td><td>Validate outputs, test representative operating conditions, calculate conservative economics, and deliver an implementation-ready recommendation or a documented rejection.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">An illustrative successful result <span style="font-weight:400; font-size:14px; color:var(--meta);">(not a promised outcome)</span></h3>
+        <div class="callout">"We identified $420K/year of potentially reducible Snowflake consumption across three bounded workloads. We benchmarked the strongest candidate. After feasible Snowflake optimization, that candidate has $300K/year of removable source cost. The target requires $140K–$170K/year including operation and data movement, implying $130K–$160K annual operating savings. With $50K of one-time transition cost, first-year benefit is $80K–$110K before our recurring fee. The tested runs meet the agreed output and completion requirements."</div>
+        <p>That conclusion must separately state <strong>when</strong> reductions become cash savings. If an existing commitment prevents immediate savings, report avoided future growth or renewal savings as such.</p>
+
+        <h3 class="sub">Automate immediately</h3>
+        <ul class="tight">
+          <li>Metadata import and reconciliation.</li>
+          <li>Query fingerprinting and candidate grouping.</li>
+          <li>A rules-based compatibility inventory.</li>
+          <li>Repeatable execution and result capture.</li>
+          <li>Output comparisons.</li>
+          <li>A versioned economic worksheet and evidence report.</li>
+        </ul>
+
+        <h3 class="sub">Keep manual initially</h3>
+        <ul class="tight">
+          <li>Workload boundary and owner confirmation.</li>
+          <li>Contract interpretation with the customer.</li>
+          <li>Target layout and bounded tuning.</li>
+          <li>Limited SQL remediation.</li>
+          <li>Governance review.</li>
+          <li>Production integration planning and customer-operated cutover.</li>
+        </ul>
+
+        <div class="callout">Do not call annual savings "verified" after a short benchmark. The benchmark measures a defined execution scenario; annual economics remain a projection until operating results support them.</div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="7" id="sec-7">
+      <div class="section-marker">SECTION 7</div>
+      <h2>Technical Product Architecture</h2>
+      <p class="dek">One customer-run container, customer-owned storage, a small analysis database, and a reproducible execution package. A multi-tenant SaaS control plane can wait.</p>
+      <div class="prose">
+
+        <div class="diagram-box">Snowflake metadata ─────┐
+                        ├──▶ Customer-run collector
+dbt artifacts + owner ──┘         │
+                                   ▼
+                     Workload evidence &amp; economics
+                                   │
+                                   ▼
+                        Selected benchmark plan
+                                   │
+                                   ▼
+                        Customer AWS runner
+                          │              │
+                          ▼              ▼
+                 Snowflake baseline   Athena / Glue / S3 Iceberg
+                          │              │
+                          └──────┬───────┘
+                                 ▼
+                  Correctness &amp; performance comparison
+                                 │
+                                 ▼
+                 Business case &amp; implementation decision</div>
+
+        <h3 class="sub">Metadata collection</h3>
+        <p>Collect roughly 60–90 days of detailed history initially, plus longer aggregate spend history to identify seasonality:</p>
+        <ul class="tight">
+          <li><code>QUERY_HISTORY</code>: SQL, hashes, tags, timings, scans, failures, and execution context.</li>
+          <li>Warehouse metering, load, and events.</li>
+          <li>Standard-warehouse query attribution.</li>
+          <li>Table sizes, schemas, view definitions, tasks, and policy references.</li>
+          <li><code>ACCESS_HISTORY</code> where available.</li>
+          <li>dbt manifest and run results.</li>
+          <li>Customer-provided effective pricing and commitment information.</li>
+        </ul>
+        <p>Handle Adaptive Warehouses separately: current documentation uses <code>QUERY_METERING_HISTORY</code> for their per-query consumption, with potentially multiple hourly records per query. Detect capabilities rather than assuming one collector query works everywhere. <a href="https://docs.snowflake.com/en/sql-reference/account-usage/query_metering_history" target="_blank" rel="noopener">Adaptive query metering ↗</a></p>
+
+        <h3 class="sub">Workload identification</h3>
+        <p>Group by dbt invocation/model, query tags, query fingerprints, parent-child execution relationships, schedules, and read/write sets. Require human confirmation for the selected workload. One query pattern may belong to multiple business processes.</p>
+
+        <h3 class="sub">Dependency graph</h3>
+        <p>Store typed edges such as reads, writes, schedules, consumes, and protects. Attach provenance and observation time to every edge; distinguish observed, statically inferred, and owner-confirmed relationships.</p>
+        <p><code>OBJECT_DEPENDENCIES</code> omits data movement through CTAS, INSERT, and MERGE, so it cannot independently establish pipeline lineage. <a href="https://docs.snowflake.com/en/sql-reference/account-usage/object_dependencies" target="_blank" rel="noopener">Snowflake dependency limitations ↗</a></p>
+        <p>For the wedge, ordinary relational tables are sufficient. Unknown external consumers should block a production recommendation until resolved.</p>
+
+        <h3 class="sub">Cost attribution</h3>
+        <p>Maintain three distinct values:</p>
+        <ol class="tight">
+          <li><strong>Attributed consumption:</strong> workload allocation for discovery.</li>
+          <li><strong>Avoidable consumption:</strong> estimated reduction after removing or rescheduling it.</li>
+          <li><strong>Realizable financial benefit:</strong> effect after contracts, discounts, added target spend, and timing.</li>
+        </ol>
+        <p>Reconcile usage against billed totals, explaining idle usage and other differences. Never multiply query duration by warehouse price and assume concurrent queries each consumed the entire warehouse. <a href="https://docs.snowflake.com/en/sql-reference/account-usage/warehouse_metering_history" target="_blank" rel="noopener">Warehouse metering documentation ↗</a></p>
+
+        <h3 class="sub">Portability analysis</h3>
+        <p>Use SQL parsing, compiled dbt SQL, schema information, and a versioned capability matrix. Return: supported within the chosen scope, requires a known transformation, requires investigation, or blocked. Inspect types, timestamps, null behavior, semi-structured operations, incremental logic, policies, and external dependencies. A parseable query is not proof of equivalent behavior.</p>
+
+        <h3 class="sub">TCO estimation</h3>
+        <div class="callout">Annual operating benefit = source expenditure actually avoidable − all incremental target operating costs.<br><br>First-year benefit = operating benefit during the actual post-cutover period − assessment, transition, dual-run, and product costs.</div>
+        <p>Include compute, storage, requests, catalog, data transfer, extraction, refresh, maintenance, orchestration, monitoring, and customer labor. Show low/base/high scenarios and identify which assumptions dominate. Do not count one-time migration cost both upfront and again as annual amortization in the same calculation.</p>
+
+        <h3 class="sub">Benchmarking</h3>
+        <p>Choose <strong>Athena engine 3 + Glue catalog + Iceberg on S3</strong>, in the customer's AWS region, as the first supported configuration. For native Snowflake inputs, use an approved consistent snapshot/export into customer S3, followed by target-table creation. Existing compatible S3 inputs can avoid this step. A directory of exported Parquet files alone is not an Iceberg table.</p>
+        <p>Benchmark: identical logical inputs and required outputs; historical parameters and representative partition sizes; normal and peak operating conditions; relevant concurrency, queue time, retries, and completion time; cache behavior with result reuse documented and controlled; equal, explicitly bounded tuning effort.</p>
+        <p>Allow each engine an appropriate physical layout, but price the work needed to create and maintain it. Include large partitions, skew, and backfills — a small random sample cannot substantiate production-scale savings.</p>
+
+        <h3 class="sub">Validation</h3>
+        <p>Compare schemas, row counts, keys, duplicates, null behavior, exact values where required, and agreed business metrics. Use canonicalized hashes or aggregates for scalable screening, followed by targeted differences. Apply tolerances only where the customer's semantics permit them — do not hide timestamp truncation or financial rounding behind broad numeric tolerances. Athena's documented timestamp precision limitation is a concrete example requiring explicit handling. <a href="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg.html" target="_blank" rel="noopener">Athena Iceberg constraints ↗</a></p>
+
+        <h3 class="sub">Customer-VPC / BYOC execution</h3>
+        <p>Run the collector and orchestration container in the customer's environment, using separate metadata and benchmark roles, scoped credentials, encrypted storage, execution limits, and audit logs.</p>
+        <p>Athena compute is an AWS-managed service; BYOC does <strong>not</strong> mean its workers run inside the customer's VPC. Describe that boundary accurately. Keep raw SQL, literals, data, and detailed results customer-side by default. Export only approved derived evidence.</p>
+
+        <h3 class="sub">Where LLMs help</h3>
+        <ul class="tight">
+          <li>Explaining unsupported constructs.</li>
+          <li>Drafting bounded SQL changes.</li>
+          <li>Suggesting semantic edge cases.</li>
+          <li>Summarizing observed blockers and remediation work.</li>
+        </ul>
+
+        <h3 class="sub">Where deterministic systems are required</h3>
+        <ul class="tight">
+          <li>Access control and execution scope.</li>
+          <li>Cost arithmetic and reconciliation.</li>
+          <li>Query identity and provenance.</li>
+          <li>Capability gates.</li>
+          <li>Benchmark measurement.</li>
+          <li>Result comparison and acceptance criteria.</li>
+        </ul>
+        <div class="callout">An LLM must never invent dependencies, certify correctness, or generate a confidence percentage from narrative judgment.</div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="8" id="sec-8">
+      <div class="section-marker">SECTION 8</div>
+      <h2>The Core Intelligence / Moat</h2>
+      <p class="dek">The most valuable dataset is a corpus of tested workload changes and realized outcomes.</p>
+      <div class="prose">
+        <p>Each record should connect:</p>
+        <ul class="tight">
+          <li>Source pipeline structure and dependency boundary.</li>
+          <li>Data characteristics: scale, skew, cardinality, partitioning, update pattern.</li>
+          <li>Engine versions and configurations.</li>
+          <li>Business requirements.</li>
+          <li>Proposed change and required remediation.</li>
+          <li>Predicted versus measured cost and performance.</li>
+          <li>Validation failures and their causes.</li>
+          <li>Engineering and operational effort.</li>
+          <li>Whether the customer implemented the change.</li>
+          <li>Realized consumption and financial outcomes.</li>
+          <li>Reasons a technically successful proposal was rejected.</li>
+        </ul>
+        <div class="callout"><strong>Negative results are essential.</strong> A corpus containing only successful migrations will systematically overstate opportunity.</div>
+        <p>The feedback loop becomes valuable if each customer reduces the next customer's assessment effort, improves prediction calibration, or prevents a known failure.</p>
+
+        <h3 class="sub">Three constraints limit defensibility</h3>
+        <ol class="tight">
+          <li><strong>Data rights:</strong> permission to analyze a customer's SQL does not imply permission to reuse it for cross-customer learning.</li>
+          <li><strong>Generalization:</strong> benchmarks depend heavily on data distribution, configuration, and workload context.</li>
+          <li><strong>Drift:</strong> engine improvements and price changes age results.</li>
+        </ol>
+        <p>Major vendors can reproduce parsers, runners, reports, and much of the predictive modeling. They may have vastly more execution telemetry. A neutral vendor can potentially accumulate better paired cross-platform intervention evidence, including rejected changes — but that advantage must be earned.</p>
+        <div class="callout"><strong>Realistic moat assessment:</strong> weak initially; potentially moderate with scale and workflow integration. The customer's operational dependency on your validated change process may become more defensible than a standalone prediction model.</div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="9" id="sec-9">
+      <div class="section-marker">SECTION 9</div>
+      <h2>Killer Assumptions</h2>
+      <p class="dek">Ranks are relative judgments, not measured probabilities. In each rank column, 1 means highest — most likely false, greatest consequence, or hardest to test.</p>
+      <div class="prose">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="min-width:260px;">Assumption that must hold</th><th>Prob. false</th><th class="num">Prob. rank</th><th class="num">Consequence rank</th><th class="num">Testing difficulty rank</th></tr></thead>
+            <tbody>
+              <tr><td>Customers repeatedly have valuable decisions and will pay for ongoing evaluation.</td><td><span class="flag high">High</span></td><td class="num">1</td><td class="num">2</td><td class="num">1</td></tr>
+              <tr><td>Enough qualified workloads yield material realizable savings after native optimization and full transition/operating costs.</td><td><span class="flag mediumhigh">Medium–high</span></td><td class="num">2</td><td class="num">1</td><td class="num">4</td></tr>
+              <tr><td>Customers will grant access, allocate engineers, and implement successful recommendations.</td><td><span class="flag mediumhigh">Medium–high</span></td><td class="num">3</td><td class="num">3</td><td class="num">3</td></tr>
+              <tr><td>Assessment and implementation can become sufficiently repeatable for software economics.</td><td><span class="flag medium">Medium</span></td><td class="num">4</td><td class="num">4</td><td class="num">2</td></tr>
+              <tr><td>Enough customers can be acquired economically despite existing vendors and procurement friction.</td><td><span class="flag medium">Medium</span></td><td class="num">5</td><td class="num">5</td><td class="num">5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>If the first fails, the likely business is episodic services or assessment software. If the second fails, the offloading thesis fails. If the fourth fails, adding more customers adds approximately proportional engineering work.</p>
+      </div>
+    </section>
+
+    <section class="section" data-idx="10" id="sec-10">
+      <div class="section-marker">SECTION 10</div>
+      <h2>Validation Before Code</h2>
+      <p class="dek">Run a small number of evidence-rich engagements. Do not substitute dozens of interviews for these tests.</p>
+      <div class="prose">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="min-width:170px;">Experiment</th><th style="min-width:220px;">What to do</th><th style="min-width:220px;">Evidence and decision</th></tr></thead>
+            <tbody>
+              <tr><td>1. Access and intent test</td><td>Approach 10–15 tightly qualified accounts. Request metadata exports, actual rates, a named engineer, and the target environment — not just a meeting.</td><td>Seek at least three complete evidence packages. Record access delays and refusal reasons. Tests practical participation.</td></tr>
+              <tr><td>2. Residual opportunity audit</td><td>Inspect 3–5 real accounts, including at least one already using an optimizer. Separate native fixes from offload opportunities.</td><td>Determine whether meaningful opportunities survive honest alternatives. Proposed screening threshold: ≥$100K annual operating benefit, payback under 12 months — let buyers establish their actual bar.</td></tr>
+              <tr><td>3. Paid assessment</td><td>Sell the defined 30-day proof for a fixed early-partner fee, perhaps $5K–$10K, with transparent cloud-cost treatment.</td><td>Payment validates assessment demand. Track actual delivery hours; don't interpret a heavily subsidized engagement as proven software economics.</td></tr>
+              <tr><td>4. Matched benchmark</td><td>Test one bounded pipeline per participating customer on optimized Snowflake and the same single AWS target.</td><td>Require agreed correctness, freshness, completion, and cost criteria. Count rejected candidates in the denominator.</td></tr>
+              <tr><td>5. Forecast holdout</td><td>Record cost and performance predictions before testing a later period, larger partition, or different workload.</td><td>Measure prediction error and interval coverage. Adjusting the model after seeing the result is tuning, not validation.</td></tr>
+              <tr><td>6. Implementation commitment</td><td>Before benchmarking, agree what result would justify a scheduled offload. After success, obtain the engineering allocation and execute one customer-approved production change.</td><td>A benchmark that passes but never ships exposes organizational or economic barriers.</td></tr>
+              <tr><td>7. Realization measurement</td><td>Observe the deployed workload for 60–90 days; account for demand, unrelated changes, commitments, and added operating work.</td><td>Check whether consumption and financial benefits match the business case. Separate cash reduction from avoided growth.</td></tr>
+              <tr><td>8. Recurrence test</td><td>Offer paid evaluation of the next material pipeline changes, with a defined cadence and owner.</td><td>Look for a second and third meaningful decision, implemented actions, and a paid extension. Dashboard logins are weak evidence.</td></tr>
+              <tr><td>9. Repeatability and competition test</td><td>Track delivery hours by activity across customers; let an incumbent or destination vendor propose an alternative assessment.</td><td>Determine whether the advantage is durable software, scarce founder expertise, a lower price, or merely being first to offer help.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">Proposed gate before committing to substantial platform engineering</h3>
+        <ul class="tight">
+          <li>Three paid assessments.</li>
+          <li>At least two compelling cases that survive native optimization and full TCO.</li>
+          <li>One production offload with measured operating results.</li>
+          <li>Evidence of repeat paid use beyond the original assessment.</li>
+          <li>Delivery effort declining across customers without excluding most of the valuable opportunity.</li>
+        </ul>
+        <div class="callout">These are learning gates, not statistical proof. Their purpose is to make expensive self-deception harder.</div>
+      </div>
+    </section>
+
+    <section class="section" data-idx="11" id="sec-11">
+      <div class="section-marker">SECTION 11 · FINAL</div>
+      <h2>Final Decision</h2>
+      <p class="dek">Do more validation before building.</p>
+      <div class="prose">
+        <p>The technical components are feasible within a narrow scope. What remains unproven is whether enough customers have removable spend, will act on the evidence, and will pay repeatedly for a product that becomes cheaper to deliver over time.</p>
+        <div class="callout">Build only the tooling necessary to answer those questions. The document does not yet justify a broad workload platform.</div>
+
+        <h3 class="sub">A. The company, in one sentence</h3>
+        <p>A vendor-independent system that helps data teams approve economically worthwhile pipeline changes and verify their production outcomes.</p>
+
+        <h3 class="sub">B. The first product, in one sentence</h3>
+        <p>A paid, reproducible benchmark that determines whether one bounded Snowflake pipeline should move to Athena/Iceberg after accounting for correctness, performance, and full economics.</p>
+
+        <h3 class="sub">C. The first customer profile, in one sentence</h3>
+        <p>An AWS-based company spending roughly $1M–$5M annually on Snowflake, with costly batch SQL pipelines, an approved AWS analytics environment, and an accountable owner under a concrete cost mandate.</p>
+
+        <h3 class="sub">D. The first thing to build in Codex</h3>
+        <p>A customer-run command-line analyzer that imports Snowflake metadata and dbt artifacts, reconciles spend, and produces an auditable shortlist distinguishing attributed cost, potentially avoidable cost, dependencies, and unresolved assumptions.</p>
+
+        <h3 class="sub">E. The first thing NOT to build</h3>
+        <p>A multi-engine dashboard with automated migration or workload routing.</p>
+
+        <h3 class="sub">F. The single most urgent question for a real customer</h3>
+        <div class="callout" style="font-size:17px; font-style:italic; color:var(--ink);">"Which workload will you actually authorize us to offload this quarter if we prove it meets your requirements, and how much spend must disappear from your budget to justify doing it?"</div>
+      </div>
+    </section>
+
+    <div class="pagenav">
+      <button id="prevBtn">← <span class="lbl" id="prevLbl">Previous</span></button>
+      <button id="nextBtn"><span class="lbl" id="nextLbl">Next</span> →</button>
+    </div>
+
   </main>
+</div>
+
+<script>
+  const titles = [
+    "Opening Assessment",
+    "1 · Key Insights",
+    "2 · Facts vs Hypotheses",
+    "3 · Contradictions",
+    "4 · Startup Thesis",
+    "5 · What Not to Build",
+    "6 · The Wedge",
+    "7 · Architecture",
+    "8 · Core Moat",
+    "9 · Killer Assumptions",
+    "10 · Validation Plan",
+    "11 · Final Decision"
+  ];
+
+  const tabsEl = document.getElementById('tabs');
+  titles.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    btn.dataset.idx = i;
+    btn.innerHTML = `<span class="n">${i === 0 ? '·' : i}</span><span>${t}</span>`;
+    btn.addEventListener('click', () => showSection(i));
+    tabsEl.appendChild(btn);
+  });
+
+  const sections = document.querySelectorAll('.section');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const progressFill = document.getElementById('progress-fill');
+  const progressLabel = document.getElementById('progress-label');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const prevLbl = document.getElementById('prevLbl');
+  const nextLbl = document.getElementById('nextLbl');
+
+  function showSection(idx){
+    sections.forEach(s => s.classList.toggle('active', +s.dataset.idx === idx));
+    tabBtns.forEach(b => b.classList.toggle('active', +b.dataset.idx === idx));
+    progressFill.style.width = (((idx+1)/titles.length)*100) + '%';
+    progressLabel.textContent = `SECTION ${idx+1} OF ${titles.length}`;
+
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === titles.length - 1;
+    prevLbl.textContent = idx > 0 ? titles[idx-1] : '—';
+    nextLbl.textContent = idx < titles.length - 1 ? titles[idx+1] : '—';
+
+    const active = document.getElementById('sec-' + idx);
+    if (active) active.scrollIntoView({block:'start'});
+    window.scrollTo({top:0, behavior:'instant'});
+    localStorage.setItem('memo-tab', idx);
+  }
+
+  prevBtn.addEventListener('click', () => {
+    const cur = [...tabBtns].findIndex(b => b.classList.contains('active'));
+    if (cur > 0) showSection(cur - 1);
+  });
+  nextBtn.addEventListener('click', () => {
+    const cur = [...tabBtns].findIndex(b => b.classList.contains('active'));
+    if (cur < titles.length - 1) showSection(cur + 1);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') nextBtn.click();
+    if (e.key === 'ArrowLeft') prevBtn.click();
+  });
+
+  // Restore last-read tab (offline-friendly, no network dependency)
+  let start = 0;
+  try {
+    const saved = localStorage.getItem('memo-tab');
+    if (saved !== null) start = Math.min(+saved, titles.length - 1);
+  } catch(e){}
+  showSection(start);
+</script>
+
 </body>
 </html>
